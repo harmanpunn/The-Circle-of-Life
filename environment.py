@@ -31,6 +31,13 @@ class Environment:
             self.graphs = 30
             self.games = 100
 
+            self.mouse_counter = 0
+            self.explore = True
+            self.state = []
+            self.stateInfo = {
+                "value" : -1,
+                "move" : -1
+            }
             Environment.instances.append(self)
         else:
             raise RuntimeError("Initialising Environment multiple times!")

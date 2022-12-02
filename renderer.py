@@ -25,6 +25,7 @@ class Renderer:
         self.debug_centers = []
         center  = (self.screenSize[0]/2,self.screenSize[1]/2)
 
+
         for i in range(0,self.node_count):
             self.node_colors.append(random.choices(range(256), k=3))
             self.node_centers.append((center[0]+ 200*math.cos(2*i*math.pi/self.node_count),center[1]+ 200*math.sin(2*i*math.pi/self.node_count)))
@@ -32,6 +33,7 @@ class Renderer:
         
         self.graph_info = graph.info
         self.node_states = graph.node_states
+        
 
         self.edge_rects = []
         self.edge_angles = []
@@ -57,8 +59,12 @@ class Renderer:
             pygame.init()
             self.surface = pygame.display.set_mode(self.screenSize)
             pygame.display.set_caption('Circle of Life')
-            self.font = pygame.font.Font('freesansbold.ttf', 12)
-
+            self.font = pygame.font.Font('freesansbold.ttf', 12)            
+            self.sprites = [
+                pygame.image.load("./sprites/predator.png"),
+                pygame.image.load("./sprites/player.png"),
+                pygame.image.load("./sprites/prey.png")
+                ]
     
     @staticmethod
     def angle(A, B, aspectRatio):
@@ -72,6 +78,7 @@ class Renderer:
         if not Environment.getInstance().ui:
             return
         self.surface.fill((217,217,217))
+
         
         for i in range(0,len(self.edge_rects)):
             pygame.draw.arc(self.surface,(0,0,0),self.edge_rects[i],self.edge_angles[i][0],self.edge_angles[i][1])
@@ -91,13 +98,7 @@ class Renderer:
                 pygame.draw.circle(self.surface, (0,0,0), self.node_centers[i] , radius,width=1)
                 self.surface.blit(text,textRect)
             else:
-                img = None
-                if tileState == 0 :
-                    img = pygame.image.load("./sprites/predator.png")
-                elif tileState == 1 :
-                    img = pygame.image.load("./sprites/player.png")
-                elif tileState == 2 :
-                    img = pygame.image.load("./sprites/prey.png")
+                img = self.sprites[tileState]
                 
                 # print(tileState)
                 self.surface.blit(img,((self.node_centers[i][0]-16,self.node_centers[i][1]-16)))
@@ -123,6 +124,26 @@ class Renderer:
 
             # textRect = (Game.map_size[0]*2,Game.map_size[1]*5)
             self.surface.blit(text, (20,20))
+        
+        mouse_counter = Environment.getInstance().mouse_counter
+        if mouse_counter == 2 :
+            img = pygame.image.load("./sprites/predator.png")
+        elif mouse_counter == 0 :
+            img = pygame.image.load("./sprites/player.png")
+        elif mouse_counter == 1 :
+            img = pygame.image.load("./sprites/prey.png")
+        elif mouse_counter == 3 :
+            img = pygame.image.load("./sprites/reset.png")
+            
+        
+        if Environment.getInstance().explore:
+            self.surface.blit(img,(self.screenSize[0]/2-16,self.screenSize[1]/2-16))
+            if len(Environment.getInstance().state) ==3:
+                text = pygame.font.Font('freesansbold.ttf',20).render('Value : '+str(Environment.getInstance().stateInfo['value']), True, (0,0,0))
+                self.surface.blit(text, (20,20))
+                text = pygame.font.Font('freesansbold.ttf',20).render('Move  : '+str(Environment.getInstance().stateInfo['move']), True, (0,0,0))
+                self.surface.blit(text, (20,40))
+
         pygame.display.flip()
         pass
 
