@@ -11,8 +11,6 @@ from util import get_shortest_path
 def getValues(graph: Graph):
     # values 
     values = {}
-    # all transition probabilities
-    prob_matrix = {}
     for agent in range(0, Environment.getInstance().node_count):
             for prey in range(0, Environment.getInstance().node_count):
                 for predator in range(0, Environment.getInstance().node_count):
@@ -25,36 +23,9 @@ def getValues(graph: Graph):
                         values[(agent, prey, predator)] = 0
 
 
-    states = values.keys()   
-    # for all states
-    for state in states:
-        probs = {}
-        # all possible actions
-        actions = graph.info[state[0]] + [state[0]]
-        for action in actions:
-            action_probs = {}
-            # prey options
-            prey_options = graph.info[state[1]] + [state[1]]
-            # predator options
-            predator_options = graph.info[state[2]]
-            neigh_dist = []
-            # calculating distances to new agent position
-            for neigh in predator_options:
-                neigh_dist.append(get_shortest_path(graph.info, neigh, action))
-
-            # getting closest predator actions to agent location
-            predator_close = [predator_options[i] for i in range(
-                0, len(predator_options)) if neigh_dist[i] == min(neigh_dist)]
-
-            for p in prey_options:
-                for r in predator_options:
-                    # calculating probabilities
-                    action_probs[(action, p, r)] = (1/len(prey_options))*(0.6*(1/len(predator_close)
-                                                                                 if r in predator_close else 0.0)+0.4/len(predator_options))
-            # recording probs according to actions
-            probs[action] = action_probs
-        # embedding probs of each state
-        prob_matrix[state] = probs 
+    states = values.keys()
+    # all transition probabilities
+    prob_matrix = getProbs(graph,values)
 
 
     i = 0  
@@ -111,7 +82,41 @@ def getPolicyFromValues(values, prob_matrix):
                 min_val = min(val, min_val)
     #policy
     return policy
-    
+
+def getProbs(graph: Graph, values):
+    states = values.keys()
+    # all transition probabilities
+    prob_matrix = {}
+    # for all states
+    for state in states:
+        probs = {}
+        # all possible actions
+        actions = graph.info[state[0]] + [state[0]]
+        for action in actions:
+            action_probs = {}
+            # prey options
+            prey_options = graph.info[state[1]] + [state[1]]
+            # predator options
+            predator_options = graph.info[state[2]]
+            neigh_dist = []
+            # calculating distances to new agent position
+            for neigh in predator_options:
+                neigh_dist.append(get_shortest_path(graph.info, neigh, action))
+
+            # getting closest predator actions to agent location
+            predator_close = [predator_options[i] for i in range(
+                0, len(predator_options)) if neigh_dist[i] == min(neigh_dist)]
+
+            for p in prey_options:
+                for r in predator_options:
+                    # calculating probabilities
+                    action_probs[(action, p, r)] = (1/len(prey_options))*(0.6*(1/len(predator_close)
+                                                                                 if r in predator_close else 0.0)+0.4/len(predator_options))
+            # recording probs according to actions
+            probs[action] = action_probs
+        # embedding probs of each state
+        prob_matrix[state] = probs 
+    return prob_matrix
 
 # values, probMatrix = getValues()         
 # print(getPolicyFromValues(values,probMatrix))

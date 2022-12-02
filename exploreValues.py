@@ -1,17 +1,29 @@
 from graph import Graph
-from valueIteration import getPolicyFromValues, getValues
+from valueIteration import getPolicyFromValues, getValues, getProbs
 from renderer import Renderer
 from environment import Environment
 import pygame
 import math
+import pickle
+import os
 
 Environment(True,50)
 
-graph = Graph()
-renderer = Renderer(graph)
+filePath = "./test.dump"
 
-vals, probs = getValues(graph)
-policy = getPolicyFromValues(vals, probs)
+graph = Graph()
+
+if not os.path.exists(filePath):
+    vals, probs = getValues(graph)
+    policy = getPolicyFromValues(vals, probs)
+    pickle.dump([graph.info,vals],open(filePath,"wb"))
+else:
+    info, vals = pickle.load(open(filePath,"rb"))
+    graph.info = info
+    probs = getProbs(graph,vals)
+    policy = getPolicyFromValues(vals,probs)
+
+renderer = Renderer(graph)
 
 stateToGraph = {
     0 : 1,
