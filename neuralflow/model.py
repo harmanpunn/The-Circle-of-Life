@@ -4,9 +4,9 @@ import numpy as np
 from tqdm import tqdm
 
 def mse(out,Y):
-    return np.square(np.linalg.norm(np.subtract(out,Y),axis=0))/Y.shape[0]
+    return np.square(np.linalg.norm(np.subtract(out,Y),axis=1))/Y.shape[0]
 def mseGrad(out,Y):
-    return 2*np.subtract(out,Y)/Y.shape[0]
+    return 2*np.subtract(out,Y)
 
 class Model:
     def __init__(self,input, loss = "mse") -> None:
@@ -29,23 +29,6 @@ class Model:
         self.initialised = True
         for d in self.description:
             self.layers.append(DNNLayer(d[0],d[1],activation=d[2]))
-
-    def train_step(self,X, Y):
-        # forward
-        out = self.predict(X)
-        
-        # backprop step
-        for i, layer in reversed(list(enumerate(self.layers))):
-            if i==len(self.layers)-1:
-                layer.backward(lossGrad=self.lossGrad(out,Y).transpose(),lastlayer=True)
-                continue
-            layer.backward(wNext = self.layers[i+1].weights, outGradNext= self.layers[i+1].memory["outGrad"])
-        # update weights
-        for layer in self.layers:
-            layer.updateWeights()
-
-        #return loss
-        return self.loss(out,Y)
 
     def train(self,X,Y,batch_size=8,epochs = 1):
         samplesCount = X.shape[0]
@@ -71,6 +54,24 @@ class Model:
             lossHistory.append(loss)
         return lossHistory
 
+    def train_step(self,X, Y):
+        # forward
+        out = self.predict(X)
+        
+        # backprop step
+        for i, layer in reversed(list(enumerate(self.layers))):
+            if i==len(self.layers)-1:
+                layer.backward(lossGrad=self.lossGrad(out,Y).transpose(),lastlayer=True)
+                continue
+            layer.backward(wNext = self.layers[i+1].weights, outGradNext= self.layers[i+1].memory["biasGrad"])
+        # update weights
+        for layer in self.layers:
+            layer.updateWeights()
+
+        #return loss
+        return self.loss(out,Y)
+
+
     def predict(self, x):
         if not self.initialised:
             raise RuntimeError("Layers not initialised")
@@ -82,8 +83,8 @@ class Model:
             raise ValueError("Invalid input shape. "+str(x1.shape[1])+" != "+str(self.input))
         
         x1 = x1.transpose()
-        for layer in self.layers:    
-            x1 = np.append([np.ones(x1.shape[1])],x1,axis=0)
+        for layer in self.layers:
             x1 = layer.forward(x1)            
         
         return x1.transpose()
+
