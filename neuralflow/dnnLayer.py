@@ -1,14 +1,13 @@
-from activation import ActivationFunction
+from neuralflow.activation import ActivationFunction
 import numpy as np
 
 class DNNLayer:
-    def __init__(self, input, output, batchSize  = 1, weights = None, bias = None, activation = ActivationFunction.relu) -> None:
+    def __init__(self, input, output, weights = None, bias = None, activation = ActivationFunction.sigmoid) -> None:
         self.activationFunction = ActivationFunction.getFunction(activation)
         self.activationGradient = ActivationFunction.getGradient(activation)
         
         self.input = input
         self.output = output
-        self.batchSize = batchSize
 
         self.lastLayer = False
 
@@ -22,39 +21,42 @@ class DNNLayer:
 
     def forward(self, x1):
         x = np.array(x1)
-        
-        if x.shape[1]!=self.input:
-            raise ValueError("Invalid input shape, expected "+str(self.input)+" got "+str(x.shape[1]))
-        
-        x = x.transpose()
-        x = np.append([np.ones(x.shape[1])],x,axis=0)
-        
+        if x.shape[0]!=self.input+1:
+            raise ValueError("Invalid input shape, expected "+str(self.input+1)+" got "+str(x.shape[0]))
+    
         self.memory["in"] = x
+        # print("==========")
+        # print("IN: ",self.memory["in"].shape)
+        # print("Weights: ",self.weights.shape)
         out =  np.matmul(self.weights, x)
-        self.memory["out"] = out
+        # A( W x X )
+        self.memory["out"] = self.activationFunction(out)
+        # print("OUT: ",self.memory["out"].shape)
         self.memoryFlag = True
 
-        return self.activationFunction(self.memory["out"]).transpose()
+        return self.memory["out"]
 
-    def backward(self, x):
+    def backward(self, wNext= None, outGradNext=None, lossGrad = None, lastlayer = False):
+        if (lastlayer and lossGrad is None):
+            raise ValueError("Invalid Back prop last layer")
+        if (not lastlayer and wNext is None and outGradNext is None):
+            raise ValueError("Invalid back prop")
         if not self.memoryFlag:
             raise MemoryError("Run a proper forward pass before back prop")
         
-        print(self.memory["in"].shape)
-        print(self.memory["out"].shape)
-        gradient = np.matmul(self.activationGradient(self.memory["out"]),self.memory["in"].transpose())
-        print(gradient)
-        print(gradient.shape)
-        print(self.weights.shape)
-        self.memoryFlag = False
 
-        # calculate gradient
-        # if self.lastLayer:
-
-            
-
-    
-layer = DNNLayer(2,10,2)
-
-print(layer.forward([[1,2],[2,3]]))
-print(layer.backward([1,2,3]))
+        if not lastlayer:
+            temp = np.append([np.ones(self.memory["out"].shape[1])],self.memory["out"],axis=0)
+            self.memory["outGrad"] = np.matmul(wNext.transpose(),np.multiply(outGradNext,self.activationGradient(np.matmul(wNext,temp))))[1:]
+        else:
+            self.memory["outGrad"] = lossGrad
+        
+        self.memory["weightGrad"] = np.matmul(np.multiply(self.memory["outGrad"],self.activationGradient(np.matmul(self.weights,self.memory["in"]))),self.memory["in"].transpose())
+        
+    def updateWeights(self):
+        if not "weightGrad" in self.memory:
+            raise MemoryError("Run a backward pass first")
+        # print("=====================")
+        # print("Out    change: ",np.linalg.norm(self.memory["weightGrad"]))
+        # print("Weight change: ",np.linalg.norm(self.memory["outGrad"]))
+        self.weights = np.subtract(self.weights,0.0001*self.memory["weightGrad"])
