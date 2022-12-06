@@ -1,90 +1,104 @@
-from neuralflow.dnnLayer import DNNLayer
-from neuralflow.activation import ActivationFunction
+from neuralflow.fcLayer import FCLayer
+from neuralflow.activation import ActivationFunction, ActivationLayer
 import numpy as np
 from tqdm import tqdm
+import math
 
-def mse(out,Y):
-    return np.square(np.linalg.norm(np.subtract(out,Y),axis=1))/Y.shape[0]
-def mseGrad(out,Y):
-    return 2*np.subtract(out,Y)
+def mse(y_true, y_pred):
+    return np.mean(np.power(y_true-y_pred, 2));
+
+def mseGrad(y_true, y_pred):
+    return 2*(y_pred-y_true)/y_true.size;
+
+def BinaryCrossEntropy(y_true, y_pred):
+    y_truex = y_true.reshape(-1,1)
+    y_predx = y_pred.reshape(-1,1)
+    term_0 = (1-y_truex) * np.log(1-y_predx)
+    term_1 = y_truex * np.log(y_predx)
+    return -np.mean(term_0+term_1, axis=0)[0]
+    
+def BinaryCrossEntropyGrad(y_true, y_pred):
+    term_0 = (1-y_true) * 1/(1-y_pred)
+    term_1 = -1* y_true * 1/(y_pred)
+    return term_0+term_1
 
 class Model:
-    def __init__(self,input, loss = "mse") -> None:
-        self.layers : list[DNNLayer] = []
-        self.input = int(input)
+    def __init__(self,input):
+        self.layers = []
+        self.loss = None
+        self.loss_prime = None
+
         self.description = []
+        self.input = input
 
-        self.loss = mse
-        self.lossGrad = mseGrad
-
-        self.initialised = False
-
-    def addLayer(self,output,activation= ActivationFunction.sigmoid):
+    # add layer to network
+    def add(self, nodes, activation : ActivationFunction):
         if len(self.description)==0:
-            self.description.append([self.input,output,activation])
+            self.description.append([self.input, nodes, activation])
         else:
-            self.description.append([self.description[-1][1],output,activation])
+            self.description.append([self.description[-1][1], nodes, activation])
     
     def initLayers(self):
-        self.initialised = True
         for d in self.description:
-            self.layers.append(DNNLayer(d[0],d[1],activation=d[2]))
+            self.layers.append(FCLayer(d[0],d[1]))
+            self.layers.append(ActivationLayer(d[2]))
 
-    def train(self,X,Y,batch_size=8,epochs = 1):
-        samplesCount = X.shape[0]
-        batchCount = samplesCount // batch_size 
-        if samplesCount%batch_size!=0:
-            batchCount +=1
-        print("Batch Count : ", batchCount)
+    def use(self,loss = "mse"):
+        if loss=="mse":
+            self.loss = mse
+            self.loss_prime = mseGrad
+        elif loss=="bce":
+            self.loss = BinaryCrossEntropy
+            self.loss_prime = BinaryCrossEntropyGrad
+
+    # predict output for given input
+    def predict(self, input_data):
+        if len(self.layers)==0:
+            raise MemoryError("Layers not initialised")
+
+        # sample dimension first
+        samples = len(input_data)
+        result = []
+
+        # run network over all samples
+        for i in range(samples):
+            # forward propagation
+            output = input_data[i]
+            for layer in self.layers:
+                output = layer.forward_propagation(output)
+            result.append(output)
+
+        return result
+
+    # train the network
+    def fit(self, x_train, y_train, epochs, learning_rate):
+        # sample dimension first
+        samples = len(x_train)
+
         lossHistory = []
-        for e in range(0,epochs):
-            print("Epoch ",e+1)
-            loss = 0.0
-            for b in tqdm(range(0,batchCount)):
-                if b!=batchCount-1:
-                    batchInput = X[b*batch_size:b*batch_size + batch_size ]
-                    batchOutput = Y[b*batch_size:b*batch_size + batch_size ]
-                else:
-                    batchInput = X[b*batch_size:]
-                    batchOutput = Y[b*batch_size:]
+        # training loop
+        for i in range(epochs):
+            err = 0
+            for j in tqdm(range(samples)):
+                # forward propagation
+                output = x_train[j]
+                for layer in self.layers:
+                    output = layer.forward_propagation(output)
 
-                loss += np.linalg.norm(self.train_step(batchInput,batchOutput))
-            loss /= batch_size
-            print("Loss after epoch ",loss)
-            lossHistory.append(loss)
+                # compute loss (for display purpose only)
+                err += self.loss(y_train[j], output)
+                if math.isnan(err):
+                    raise ValueError("Issue with your parameters :)")
+
+                # backward propagation
+                error = self.loss_prime(y_train[j], output)
+                for layer in reversed(self.layers):
+                    error = layer.backward_propagation(error, learning_rate)
+
+            # calculate average error on all samples
+            print(err)
+            err /= samples
+            print('epoch %d/%d   error=%.10f' % (i+1, epochs, err))
+            lossHistory.append(err)
+
         return lossHistory
-
-    def train_step(self,X, Y):
-        # forward
-        out = self.predict(X)
-        
-        # backprop step
-        for i, layer in reversed(list(enumerate(self.layers))):
-            if i==len(self.layers)-1:
-                layer.backward(lossGrad=self.lossGrad(out,Y).transpose(),lastlayer=True)
-                continue
-            layer.backward(wNext = self.layers[i+1].weights, outGradNext= self.layers[i+1].memory["biasGrad"])
-        # update weights
-        for layer in self.layers:
-            layer.updateWeights()
-
-        #return loss
-        return self.loss(out,Y)
-
-
-    def predict(self, x):
-        if not self.initialised:
-            raise RuntimeError("Layers not initialised")
-        
-        x1 = np.array(x)
-        if len(x1.shape)!=2:
-            raise ValueError("Model only accepts array of inputs")
-        if x1.shape[1]!=self.input:
-            raise ValueError("Invalid input shape. "+str(x1.shape[1])+" != "+str(self.input))
-        
-        x1 = x1.transpose()
-        for layer in self.layers:
-            x1 = layer.forward(x1)            
-        
-        return x1.transpose()
-
