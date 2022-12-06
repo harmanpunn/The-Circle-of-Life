@@ -39,12 +39,14 @@ class Model:
             self.description[0] = [self.input, nodes, activation]
         else:
             self.description[len(self.description.keys())] = [self.description[len(self.description.keys())-1][1], nodes, activation]
+        return self
     
     def initLayers(self):
         for d in self.description:
             val = self.description[d]
             self.layers.append(FCLayer(val[0],val[1]))
             self.layers.append(ActivationLayer(val[2]))
+        return self
 
     def use(self,loss = "mse"):
         if loss=="mse":
@@ -53,6 +55,7 @@ class Model:
         elif loss=="bce":
             self.loss = BinaryCrossEntropy
             self.loss_prime = BinaryCrossEntropyGrad
+        return self
 
     # predict output for given input
     def predict(self, input_data):
@@ -74,7 +77,7 @@ class Model:
         return result
 
     # train the network
-    def fit(self, x_train, y_train, epochs, learning_rate):
+    def fit(self, x_train, y_train, epochs=1, learning_rate=0.001,validation_data = None):
         # sample dimension first
         samples = len(x_train)
 
@@ -82,7 +85,8 @@ class Model:
         # training loop
         for i in range(epochs):
             err = 0
-            for j in tqdm(range(samples)):
+            bar = tqdm(range(samples))
+            for j in bar:
                 # forward propagation
                 output = x_train[j]
                 for layer in self.layers:
@@ -90,6 +94,13 @@ class Model:
 
                 # compute loss (for display purpose only)
                 err += self.loss(y_train[j], output)
+                dat = {
+                    "training_loss":err/(j+1)
+                }
+                if not validation_data is None:
+                    dat["val_loss"] = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
+
+                bar.set_postfix(dat)
                 if math.isnan(err):
                     raise ValueError("Issue with your parameters :)")
 
@@ -101,7 +112,12 @@ class Model:
             # calculate average error on all samples
             print(err)
             err /= samples
-            print('epoch %d/%d   error=%.10f' % (i+1, epochs, err))
+            if not validation_data is None:
+                valErr = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
+                print('epoch %d/%d  || training_error=%.10f ; val_error=%.10f' % (i+1, epochs, err,valErr))
+            else:
+                print('epoch %d/%d   error=%.10f' % (i+1, epochs, err))
+        
             lossHistory.append(err)
 
         return lossHistory
