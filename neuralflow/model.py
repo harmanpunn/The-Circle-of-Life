@@ -3,6 +3,8 @@ from neuralflow.activation import ActivationFunction, ActivationLayer
 import numpy as np
 from tqdm import tqdm
 import math
+import os
+import pickle
 
 def mse(y_true, y_pred):
     return np.mean(np.power(y_true-y_pred, 2));
@@ -28,20 +30,21 @@ class Model:
         self.loss = None
         self.loss_prime = None
 
-        self.description = []
+        self.description = {}
         self.input = input
 
     # add layer to network
-    def add(self, nodes, activation : ActivationFunction):
-        if len(self.description)==0:
-            self.description.append([self.input, nodes, activation])
+    def add(self, nodes, activation : ActivationFunction = ActivationFunction.sigmoid):
+        if len(self.description.keys())==0:
+            self.description[0] = [self.input, nodes, activation]
         else:
-            self.description.append([self.description[-1][1], nodes, activation])
+            self.description[len(self.description.keys())] = [self.description[len(self.description.keys())-1][1], nodes, activation]
     
     def initLayers(self):
         for d in self.description:
-            self.layers.append(FCLayer(d[0],d[1]))
-            self.layers.append(ActivationLayer(d[2]))
+            val = self.description[d]
+            self.layers.append(FCLayer(val[0],val[1]))
+            self.layers.append(ActivationLayer(val[2]))
 
     def use(self,loss = "mse"):
         if loss=="mse":
@@ -102,3 +105,25 @@ class Model:
             lossHistory.append(err)
 
         return lossHistory
+
+    def save(self,path="./checkpoint"):
+        tmp = {"desc":self.description,"weights":[],"bias":[]}
+        for d in self.description:
+            tmp["weights"].append(self.layers[2*d].weights)
+            tmp["bias"].append(self.layers[2*d].bias)
+        
+        pickle.dump(tmp,open(path,"wb"))
+    
+    def load(self,path="./checkpoint"):
+        if not os.path.exists(path):
+            raise ValueError("Path does not exist")
+        
+        dump = pickle.load(open(path,"rb")) 
+        self.description = dump["desc"]
+        self.layers = []
+        for d in self.description:
+            val = self.description[d]
+            self.layers.append(FCLayer(val[0],val[1], weights=dump["weights"][d],bias=dump["bias"][d]))
+            self.layers.append(ActivationLayer(val[2]))
+        
+        return self

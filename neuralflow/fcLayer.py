@@ -2,9 +2,13 @@ from neuralflow.activation import ActivationFunction
 import numpy as np
 
 class FCLayer:
-    def __init__(self, input_size, output_size):
-        self.weights = np.random.rand(input_size, output_size) - 0.5
-        self.bias = np.random.rand(1, output_size) - 0.5
+    def __init__(self, input_size, output_size, weights = None, bias = None):
+        if (not weights is None) and (not bias is None):
+            self.weights = weights
+            self.bias = bias
+        else:
+            self.weights = np.random.rand(input_size, output_size) - 0.5
+            self.bias = np.random.rand(1, output_size) - 0.5
     
     # returns output for a given input
     def forward_propagation(self, input_data):
