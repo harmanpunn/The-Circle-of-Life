@@ -2,8 +2,10 @@ from graphEntity import GraphEntity
 from graph import Graph
 from environment import Environment
 from util import get_shortest_path
-from valueIteration import getValues, getPolicyFromValues
+from valueIteration import getValues, getPolicyFromValues, getProbs
 import random
+from readDump import readDumpFile
+
 
 from time import sleep
 
@@ -12,7 +14,7 @@ class P3Agent1(GraphEntity):
 
     someBigNumber = 200
 
-    def __init__(self, graph: Graph) -> None:
+    def __init__(self, graph: Graph, values, policy) -> None:
         # super.__init__()
         self.type = 1
         while True:
@@ -20,9 +22,12 @@ class P3Agent1(GraphEntity):
             if not graph.node_states[self.position][0] and not graph.node_states[self.position][2]:
                 break
         graph.allocate_pos(self.position, self.type)
-
-        vals , matrix = getValues(graph)
-        self.policy = getPolicyFromValues(vals, matrix)
+        
+        # matrix = getProbs(graph, values)
+        
+        # vals , matrix = getValues(graph)
+        # self.policy = getPolicyFromValues(values, matrix)
+        self.policy = policy
 
     def plan(self, graph: Graph, info):
         state = (self.position, info["prey"],info["predator"])

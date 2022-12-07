@@ -32,7 +32,7 @@ class Environment:
             self.games = 100
 
             self.mouse_counter = 0
-            self.explore = True
+            self.explore = False
             self.state = []
             self.stateInfo = {
                 "value" : -1,

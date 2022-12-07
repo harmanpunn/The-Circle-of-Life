@@ -11,24 +11,18 @@ from graph import Graph
 from renderer import Renderer
 from tqdm import tqdm
 import pygame
-
-from agents.p2.agent1 import Agent1
-from agents.p2.agent3 import Agent3
-from agents.p2.agent5 import Agent5
-from agents.p2.agent7 import Agent7
-
 import numpy as np
+
+from agents.p3.p3Agent1 import P3Agent1
 
 from predator import Predator
 from prey import Prey
+from readDump import readDumpFile
+from valueIteration import getProbs, getPolicyFromValues
 
 from helper import processArgs
 
-get_class = lambda x: globals()[x]
-
-
-def runGame(graph : Graph):
-
+def runGame(graph : Graph, values=None, policy=None):
     # graph = Graph()
     renderer =  Renderer(graph)
     # print("Initialized")
@@ -38,47 +32,14 @@ def runGame(graph : Graph):
     prey = Prey(graph)
     predator = Predator(graph)
 
-    
-    if Environment.getInstance().agent % 2 == 0:
-        Environment.getInstance().careful = True
-
-    if Environment.getInstance().agent < 3:
-        agent : GraphEntity = Agent1(graph)
-    elif Environment.getInstance().agent < 5:
-        agent : GraphEntity = Agent3(graph) 
-    elif Environment.getInstance().agent < 7:
-        agent : GraphEntity = Agent5(graph) 
-        agent.belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]
-    else:
-        agent : GraphEntity = Agent7(graph) 
-        agent.predator_belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]        
-
-        # agent : GraphEntity = get_class("Agent"+str(Environment.getInstance().agent))(graph)
-
-    if Environment.getInstance().agent==9:
-        Environment.getInstance().noisy_agent = True
-        Environment.getInstance().noisy = True
-        Environment.getInstance().careful = True
-
-    if Environment.getInstance().agent==10:
-        Environment.getInstance().noisy = False
-        Environment.getInstance().noisy_agent = False
-        Environment.getInstance().careful = True
-        Environment.getInstance().agentX = True
-
+    # Initializing project3 Agent   1
+    agent : GraphEntity = P3Agent1(graph, values, policy)
 
     running = 1
-
-    if Environment.getInstance().noisy:
-        print("So NOISY!")
-    
-    if Environment.getInstance().careful:
-        print("TipToe B)")
-
     knownRounds = None
     while True:
         if Environment.getInstance().ui:
-            sleep(0.2)
+            sleep(0.5)
             for event in pygame.event.get():
                 if event.type==pygame.QUIT:
                     running =False
@@ -86,20 +47,12 @@ def runGame(graph : Graph):
             graph.surveyed = False
 
             info = {}
-            if Environment.getInstance().agent<3:
+
+            if Environment.getInstance().agent ==1:
                 info = {
                     'prey' : prey.getPosition(),
                     'predator' : predator.getPosition()
                 }
-            elif Environment.getInstance().agent<5:
-                info = {
-                    'predator' : predator.getPosition()
-                }
-            elif Environment.getInstance().agent<7:
-                info = {
-                    'prey' : prey.getPosition()
-                }
-           
 
             graph.node_states_blocked= True
             knows = agent.__update__(graph, info)
@@ -141,7 +94,8 @@ def runGame(graph : Graph):
     knownRounds = [k/step_count for k in knownRounds]
     if Environment.getInstance().ui:
         pygame.quit()
-    return [step_count, game_state, knownRounds]  
+    return [step_count, game_state, knownRounds]
+
 
 def collectData() -> None:
     stats_dict = dict()
@@ -150,11 +104,18 @@ def collectData() -> None:
     type_list = list()
     totalConfidences = [[],[]]
     for i in  tqdm(range(0,Environment.getInstance().graphs)):
+
         graph = Graph()
+        dump = readDumpFile(i)
+        graph.info = dump[0]
+        values = dump[1]
+        matrix = getProbs(graph, values)
+        policy = getPolicyFromValues(values, matrix)
+        
         type = i
         confidencePerGraph = [0.0,0.0] 
         for _ in tqdm(range(0,Environment.getInstance().games),leave=False):
-            [step_count, game_state, confidence] = runGame(graph) 
+            [step_count, game_state, confidence] = runGame(graph, values, policy) 
             step_count_list[game_state]+=step_count
             game_state_list.append(game_state)
             type_list.append(type)
@@ -170,8 +131,6 @@ def collectData() -> None:
     
     for t in totalConfidences:
         t = np.array(t)
-        
-    
 
     win_count = game_state_list.count(1)
     lose_count = game_state_list.count(0)
@@ -189,19 +148,10 @@ def collectData() -> None:
     print("Timeout Step Count: ",step_count_list[-1])
     print("Timeout %: ", (timeout_count/z) * 100)
     print("================================")
-    '''    
-    stats_dict['graph_type'] = 1
-    stats_dict['step_count'] = step_count
-    stats_dict['game_state'] = game_state
-    '''
-    # print(stats_dict) 
-    # stats_df = pd.DataFrame(columns=['Graph Type', 'Step Count', 'Game State'])
-    # stats_df.loc[len(stats_df.index)] = []
-    # stats_df.loc[len()]
-    # stats_df = pd.DataFrame(data = stats_dict)
-    # stats_df.to_csv('Agent'+str(Environment.getInstance().agent)+'.csv', index=False)
+  
     pass
 
+    
 
 if __name__ == "__main__":
     args = processArgs()
@@ -217,6 +167,8 @@ if __name__ == "__main__":
         collectData()
     else:
         graph = Graph()
-        runGame(graph)
-
-
+        dump = readDumpFile(1)
+        graph.info = dump[0]
+        values = dump[1]
+        policy = getPolicyFromValues(values, getProbs(graph, values))
+        runGame(graph, values, policy)
