@@ -1,5 +1,6 @@
 from neuralflow.fcLayer import FCLayer
 from neuralflow.activation import ActivationFunction, ActivationLayer
+from neuralflow.dropout import DropoutLayer
 import numpy as np
 from tqdm import tqdm
 import math
@@ -33,12 +34,14 @@ class Model:
         self.description = {}
         self.input = input
 
+        self.training =  True
+
     # add layer to network
-    def add(self, nodes, activation : ActivationFunction = ActivationFunction.sigmoid):
+    def add(self, nodes, activation : ActivationFunction = ActivationFunction.sigmoid, dropout=0.0):
         if len(self.description.keys())==0:
-            self.description[0] = [self.input, nodes, activation]
+            self.description[0] = [self.input, nodes, activation,dropout]
         else:
-            self.description[len(self.description.keys())] = [self.description[len(self.description.keys())-1][1], nodes, activation]
+            self.description[len(self.description.keys())] = [self.description[len(self.description.keys())-1][1], nodes, activation,dropout]
         return self
     
     def initLayers(self):
@@ -46,6 +49,9 @@ class Model:
             val = self.description[d]
             self.layers.append(FCLayer(val[0],val[1]))
             self.layers.append(ActivationLayer(val[2]))
+            # Output does not need dropout
+            if d!=len(self.description)-1:
+                self.layers.append(DropoutLayer(val[1],val[3]))
         return self
 
     def use(self,loss = "mse"):
@@ -71,6 +77,8 @@ class Model:
             # forward propagation
             output = input_data[i]
             for layer in self.layers:
+                if not self.training and isinstance(layer, DropoutLayer):
+                    continue
                 output = layer.forward_propagation(output)
             result.append(output)
 
@@ -94,13 +102,13 @@ class Model:
 
                 # compute loss (for display purpose only)
                 err += self.loss(y_train[j], output)
-                dat = {
-                    "training_loss":err/(j+1)
-                }
-                if not validation_data is None:
-                    dat["val_loss"] = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
+                # dat = {
+                #     "training_loss":err/(j+1)
+                # }
+                # if not validation_data is None:
+                #     dat["val_loss"] = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
 
-                bar.set_postfix(dat)
+                # bar.set_postfix(dat)
                 if math.isnan(err):
                     raise ValueError("Issue with your parameters :)")
 
@@ -125,8 +133,8 @@ class Model:
     def save(self,path="./checkpoint"):
         tmp = {"desc":self.description,"weights":[],"bias":[]}
         for d in self.description:
-            tmp["weights"].append(self.layers[2*d].weights)
-            tmp["bias"].append(self.layers[2*d].bias)
+            tmp["weights"].append(self.layers[3*d].weights)
+            tmp["bias"].append(self.layers[3*d].bias)
         
         pickle.dump(tmp,open(path,"wb"))
     
@@ -141,5 +149,7 @@ class Model:
             val = self.description[d]
             self.layers.append(FCLayer(val[0],val[1], weights=dump["weights"][d],bias=dump["bias"][d]))
             self.layers.append(ActivationLayer(val[2]))
+            if d!=len(self.description)-1:
+                self.layers.append(DropoutLayer(val[1],val[3]))
         
         return self

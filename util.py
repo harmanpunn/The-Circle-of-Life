@@ -28,6 +28,7 @@ def get_shortest_path(graph, src, dest):
         # print('New Position:', path[len(path) - 2])
         return len(path)
     else:
+        print("Cannot find path between %d , %d" %(src,dest))
         raise ValueError("Invalid Graph")
 
 
