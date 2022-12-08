@@ -33,6 +33,8 @@ class Model:
 
         self.training =  True
 
+        self.min_loss = float("inf")
+
     # add layer to network
     def add(self, nodes, activation : ActivationFunction = ActivationFunction.sigmoid, dropout=0.0):
         if len(self.description.keys())==0:
@@ -83,15 +85,16 @@ class Model:
         return result
 
     # train the network
-    def fit(self, x_train, y_train, epochs=1, learning_rate=0.001,validation_data = None,save=False,filePath = None,fromEpoch = 0):
+    def fit(self, x_train, y_train, epochs=1, quiet= False, learning_rate=0.001,validation_data = None,save=False,filePath = None,fromEpoch = 0):
         # sample dimension first
         samples = len(x_train)
 
         lossHistory = []
+        epochBar = range(epochs) if not quiet else tqdm(range(epochs))
         # training loop
-        for i in range(epochs):
+        for i in epochBar:
             err = 0
-            bar = tqdm(range(samples))
+            bar = range(samples) if quiet else tqdm(range(samples))
             for j in bar:
                 # forward propagation
                 output = x_train[j]
@@ -116,18 +119,25 @@ class Model:
                     error = layer.backward_propagation(error, learning_rate)
 
             # calculate average error on all samples
-            print(err)
+            # print(err)
             err /= samples
             if not validation_data is None:
                 valErr = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
-                print('epoch %d/%d  || training_error=%.10f ; val_error=%.10f' % (i+1, epochs+fromEpoch, err,valErr))
+                if not quiet:
+                    print('epoch %d/%d  || training_error=%.10f ; val_error=%.10f' % (i+1, epochs+fromEpoch, err,valErr))
             else:
-                print('epoch %d/%d   error=%.10f' % (fromEpoch + i+1, epochs+fromEpoch, err))
-            if save:
-                print("Saving model to %s"%(filePath+str(fromEpoch + i)))
+                if not quiet:
+                    print('epoch %d/%d   error=%.10f' % (fromEpoch + i+1, epochs+fromEpoch, err))
+            if save and err<self.min_loss:
+                self.min_loss = err
+                if not quiet:
+                    print("Saving model to %s"%(filePath+str(fromEpoch + i)))
                 self.save(filePath+str(fromEpoch + i))
 
             lossHistory.append(err)
+            for layer in self.layers:
+                if isinstance(layer,FCLayer):
+                    layer.t = 0
 
         return lossHistory
 

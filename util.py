@@ -62,14 +62,16 @@ def eprint(*args, **kwargs):
 
 
 def getNewBeliefs(belief,survey_node, survey_res):
+    
     if not survey_res:
         sums = 0.0
+        tmp = [0.0]*len(belief)
         for node in range(0,Environment.getInstance().node_count):
             if node != survey_node:
                 sums += belief[node]
-            else:
-                belief[node]=0
-        belief =  [x/sums for x in belief]
+                tmp[node] = belief[node]
+        # print(belief," --------- ",sums)
+        belief =  [x/sums for x in tmp]
     else:
         if not (Environment.getInstance().noisy_agent and Environment.getInstance().noisy):
             for node in range(0,Environment.getInstance().node_count):

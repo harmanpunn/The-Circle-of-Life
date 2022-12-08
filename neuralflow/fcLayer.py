@@ -13,8 +13,12 @@ class FCLayer:
             self.weights = weights
             self.bias = bias
         else:
-            self.weights = np.random.rand(input_size, output_size) - 0.5
-            self.bias = np.random.rand(1, output_size) - 0.5
+            self.weights = np.random.uniform(-0.1,0.1,(input_size, output_size))
+            self.bias = np.random.uniform(-0.1,0.1,(1, output_size))
+
+
+            # self.weights = np.random.uniform(-(1.0 / math.sqrt(input_size)), (1.0 / math.sqrt(input_size)),(input_size, output_size))
+            # self.bias = np.random.uniform(-(1.0 / math.sqrt(input_size)), (1.0 / math.sqrt(input_size)),(1, output_size))
         
         self.Gwm = np.zeros(self.weights.shape) 
         self.Gwv = np.zeros(self.weights.shape)

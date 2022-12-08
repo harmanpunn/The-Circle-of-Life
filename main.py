@@ -21,6 +21,7 @@ from agents.p2.agent7 import Agent7
 
 from agents.p3.p3Agent1 import P3Agent1
 from agents.p3.p3Agent1Pred import P3Agent1Pred
+from agents.p3.p3Agent2 import P3Agent2
 
 import numpy as np
 
@@ -126,10 +127,13 @@ def runGame(graph : Graph, data = None):
             Environment.getInstance().agentX = True
     else:
         if Environment.getInstance().agent==1:
-            agent : GraphEntity = P3Agent1(graph)
+            agent : GraphEntity = P3Agent1(graph,vals=data["vals"])
         elif Environment.getInstance().agent==2:
             agent : GraphEntity = P3Agent1Pred(graph)
             agent.policy = getPolicyFromValues(data["vals"],getProbs(graph))
+        elif Environment.getInstance().agent==3:
+            agent : GraphEntity = P3Agent2(graph)
+            agent.vals = data["vals"]
 
     running = 1
 
@@ -168,6 +172,11 @@ def runGame(graph : Graph, data = None):
                 if Environment.getInstance().agent <3:
                     info = {
                         'prey' : prey.getPosition(),
+                        'predator' : predator.getPosition()
+                    }
+                else:
+                    info = {
+                        # 'prey' : prey.getPosition(),
                         'predator' : predator.getPosition()
                     }
 
@@ -213,7 +222,7 @@ def runGame(graph : Graph, data = None):
         pygame.quit()
     return [step_count, game_state, knownRounds]  
 
-def collectData() -> None:
+def collectData(cached= False,path=None) -> None:
     stats_dict = dict()
     step_count_list = {0:0.0,1:0.0,-1:0.0}
     game_state_list = list()
@@ -221,10 +230,13 @@ def collectData() -> None:
     totalConfidences = [[],[]]
     for i in  tqdm(range(0,Environment.getInstance().graphs)):
         graph = Graph()
+        vals = None
+        if cached:
+            graph.info, vals = pickle.load(open(path+str(i+1),"rb"))
         type = i
         confidencePerGraph = [0.0,0.0] 
         for _ in tqdm(range(0,Environment.getInstance().games),leave=False):
-            [step_count, game_state, confidence] = runGame(graph) 
+            [step_count, game_state, confidence] = runGame(graph,{"vals":vals}) 
             step_count_list[game_state]+=step_count
             game_state_list.append(game_state)
             type_list.append(type)
@@ -284,7 +296,10 @@ if __name__ == "__main__":
     if 'mode' in args.keys() and args['mode']==1:
         print("Mode different")
         Environment.getInstance().ui = False
-        collectData()
+        if not Environment.getInstance().p3:
+            collectData()
+        else:
+            collectData(True,"./datadump/data-")
     else:
         graph = Graph()
 
