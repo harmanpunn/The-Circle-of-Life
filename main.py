@@ -2,6 +2,7 @@ import sys
 import os
 from time import sleep
 import pandas as pd
+import pickle
 
 from graphEntity import GraphEntity
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
@@ -10,6 +11,7 @@ from environment import Environment
 from graph import Graph
 from renderer import Renderer
 from tqdm import tqdm
+from valueIteration import getPolicyFromValues, getProbs
 import pygame
 
 from agents.p2.agent1 import Agent1
@@ -18,6 +20,7 @@ from agents.p2.agent5 import Agent5
 from agents.p2.agent7 import Agent7
 
 from agents.p3.p3Agent1 import P3Agent1
+from agents.p3.p3Agent1Pred import P3Agent1Pred
 
 import numpy as np
 
@@ -83,7 +86,7 @@ def processArgs():
     return {}
 
 
-def runGame(graph : Graph):
+def runGame(graph : Graph, data = None):
 
     # graph = Graph()
     renderer =  Renderer(graph)
@@ -124,6 +127,9 @@ def runGame(graph : Graph):
     else:
         if Environment.getInstance().agent==1:
             agent : GraphEntity = P3Agent1(graph)
+        elif Environment.getInstance().agent==2:
+            agent : GraphEntity = P3Agent1Pred(graph)
+            agent.policy = getPolicyFromValues(data["vals"],getProbs(graph))
 
     running = 1
 
@@ -159,7 +165,7 @@ def runGame(graph : Graph):
                         'prey' : prey.getPosition()
                     }
             else:
-                if Environment.getInstance().agent ==1:
+                if Environment.getInstance().agent <3:
                     info = {
                         'prey' : prey.getPosition(),
                         'predator' : predator.getPosition()
@@ -281,6 +287,10 @@ if __name__ == "__main__":
         collectData()
     else:
         graph = Graph()
-        runGame(graph)
+
+        if Environment.getInstance().p3:
+            x = pickle.load(open("data-1","rb"))
+            graph.info = x[0]
+        runGame(graph,{"vals":x[1]})
 
 

@@ -83,8 +83,15 @@ def getPolicyFromValues(values, prob_matrix):
     #policy
     return policy
 
-def getProbs(graph: Graph, values):
-    states = values.keys()
+def getProbs(graph: Graph, values = None):
+    states = []
+    if not values is None:
+        states = values.keys()
+    else:
+        for agent in range(0, Environment.getInstance().node_count):
+            for prey in range(0, Environment.getInstance().node_count):
+                for predator in range(0, Environment.getInstance().node_count):
+                    states.append((agent,prey,predator))
     # all transition probabilities
     prob_matrix = {}
     # for all states
