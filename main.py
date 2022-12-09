@@ -130,7 +130,7 @@ def runGame(graph : Graph, data = None):
             agent : GraphEntity = P3Agent1(graph,vals=data["vals"])
         elif Environment.getInstance().agent==2:
             agent : GraphEntity = P3Agent1Pred(graph)
-            agent.policy = getPolicyFromValues(data["vals"],getProbs(graph))
+            # agent.policy = getPolicyFromValues(data["vals"],getProbs(graph))
         elif Environment.getInstance().agent==3:
             agent : GraphEntity = P3Agent2(graph)
             agent.vals = data["vals"]
@@ -232,7 +232,10 @@ def collectData(cached= False,path=None) -> None:
         graph = Graph()
         vals = None
         if cached:
-            graph.info, vals = pickle.load(open(path+str(i+1),"rb"))
+            if Environment.getInstance().agent!=2:
+                graph.info, vals = pickle.load(open(path+str(i+1),"rb"))
+            else:
+                graph.info, vals = pickle.load(open("data-1","rb"))
         type = i
         confidencePerGraph = [0.0,0.0] 
         for _ in tqdm(range(0,Environment.getInstance().games),leave=False):

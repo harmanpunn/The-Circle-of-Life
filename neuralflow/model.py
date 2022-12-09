@@ -94,6 +94,7 @@ class Model:
         # training loop
         for i in epochBar:
             err = 0
+            preds = []
             bar = range(samples) if quiet else tqdm(range(samples))
             for j in bar:
                 # forward propagation
@@ -102,7 +103,8 @@ class Model:
                     output = layer.forward_propagation(output)
 
                 # compute loss (for display purpose only)
-                err += self.loss(y_train[j], output)
+                # err += self.loss(y_train[j], output)
+                preds.append(output)
                 # dat = {
                 #     "training_loss":err/(j+1)
                 # }
@@ -120,7 +122,7 @@ class Model:
 
             # calculate average error on all samples
             # print(err)
-            err /= samples
+            err = self.loss(y_train, np.array(preds))
             if not validation_data is None:
                 valErr = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
                 if not quiet:
