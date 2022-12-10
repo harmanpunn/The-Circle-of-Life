@@ -2,8 +2,8 @@ import sys
 from environment import Environment
 
 def get_shortest_path(graph, src, dest,find = -1):
-    print('src:',src)
-    print('dest:',dest)
+    # print('src:',src)
+    # print('dest:',dest)
     if src == dest:
         if find==-1:
             return 0
@@ -18,7 +18,7 @@ def get_shortest_path(graph, src, dest,find = -1):
 
     if shortest_path(graph, src, dest, distance, predecessor):
         found = False
-        print('Short path is available')
+        # print('Short path is available')
         path = []
         j = dest
         path.append(j)
@@ -32,7 +32,7 @@ def get_shortest_path(graph, src, dest,find = -1):
         
         # print("Shortest path : ", path)
         # print('New Position:', path[len(path) - 2])
-        print("find:",find)
+        # print("find:",find)
         if find==-1:
             return len(path)
         else:

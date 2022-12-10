@@ -130,7 +130,7 @@ def runGame(graph : Graph, data = None):
             agent : GraphEntity = P3Agent1(graph,vals=data["vals"])
         elif Environment.getInstance().agent==2:
             agent : GraphEntity = P3Agent1Pred(graph)
-            # agent.policy = getPolicyFromValues(data["vals"],getProbs(graph))
+            agent.values = data["vals"]
         elif Environment.getInstance().agent==3:
             agent : GraphEntity = P3Agent2(graph)
             agent.vals = data["vals"]

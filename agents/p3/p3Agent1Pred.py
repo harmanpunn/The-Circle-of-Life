@@ -23,9 +23,9 @@ class P3Agent1Pred(GraphEntity):
                 break
         graph.allocate_pos(self.position, self.type)
 
-        self.uModel = Model(-1).load("./modelDump/7_10_5_2_1plain3499")
+        self.uModel = Model(-1).load("./modelDump/4_8_16_8_4_1plain9")
         self.uModel.training = False
-        self.policy = None
+        self.values = None
         print("Initialised!")
 
     def getValues(self,graph, s_prime):
@@ -33,13 +33,13 @@ class P3Agent1Pred(GraphEntity):
         x = get_shortest_path(graph.info,s_prime[0],s_prime[1],find = s_prime[2])
         y = get_shortest_path(graph.info,s_prime[0],s_prime[2],find = s_prime[1])
         print(x,y)
-        dt[0].append(x[0])
         dt[0].append(y[0])
+        dt[0].append(x[0])
         dt[0].append(y[1])
         dt[0].append(x[1])
         dt = np.array([dt])
-
-        return self.uModel.predict(dt)[0][0][0]
+        p = self.uModel.predict(dt)[0][0][0]
+        return p
 
     def plan(self, graph: Graph, info):
         state = (self.position, info["prey"],info["predator"])
@@ -64,7 +64,10 @@ class P3Agent1Pred(GraphEntity):
                     # tmpState = (action, p , r)
                     print("calculating probabilities")
                     probOfStateTransition = (1/len(prey_options))*(0.6*(1/len(predator_close)if r in predator_close else 0.0)+0.4/len(predator_options))
-                    valOfAction += probOfStateTransition * self.getValues(graph,(action, p , r))
+                    if action==r:
+                        valOfAction += probOfStateTransition * 9999
+                    elif action!=p:
+                        valOfAction += probOfStateTransition * self.getValues(graph,(action, p , r))
             
             if valOfAction < mnVal:
                 mnVal = valOfAction

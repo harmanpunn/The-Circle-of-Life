@@ -4,6 +4,7 @@ from environment import Environment
 from graph import Graph
 from util import get_shortest_path
 
+
 # environment = Environment(False,5)
 # graph = Graph()
 
@@ -36,12 +37,15 @@ def getValues(graph: Graph):
         print('p:', p)
         p = 0.0
         # updating for each state
+        newValues = {}
         for state in states:
             # skip game over case
             if state[0]==state[2]:
+                newValues[state] = 9999
                 continue
             # skip win case
             if state[0] == state[1] and state[0]!=state[2]:
+                newValues[state] = 0
                 continue
             min_val = float('inf')
             # for each action to track min action
@@ -55,8 +59,11 @@ def getValues(graph: Graph):
             # accumulating change in each value
             p += (min_val - values[state]) ** 2
             # updating value
-            values[state] = min_val
+            newValues[state] = min_val
+        
+        values = newValues
         i+=1
+    print("Number of iterations: ",i)
     # return all values & transitions
     return values, prob_matrix
 
