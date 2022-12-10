@@ -7,7 +7,9 @@ import math
 import pickle
 import os
 
-Environment(True,50)
+env = Environment(True,50)
+
+env.explore = True
 
 filePath = "./data-1"
 

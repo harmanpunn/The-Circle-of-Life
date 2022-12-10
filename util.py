@@ -1,11 +1,14 @@
 import sys
 from environment import Environment
 
-def get_shortest_path(graph, src, dest):
+def get_shortest_path(graph, src, dest,find = -1):
     # print('src:',src)
     # print('dest:',dest)
     if src == dest:
-        return 0;
+        if find==-1:
+            return 0
+        else:
+            return 0, dest==find
     distance = []
     predecessor = list()
 
@@ -14,20 +17,28 @@ def get_shortest_path(graph, src, dest):
         predecessor.insert(i,-1)
 
     if shortest_path(graph, src, dest, distance, predecessor):
+        found = False
         # print('Short path is available')
         path = []
         j = dest
         path.append(j)
 
         while predecessor[j] != -1:
+            if find!=-1 and predecessor[j]==find:
+                found = True
             path.append(predecessor[j])
             j = predecessor[j]
 
         
         # print("Shortest path : ", path)
         # print('New Position:', path[len(path) - 2])
-        return len(path)
+        # print("find:",find)
+        if find==-1:
+            return len(path)
+        else:
+            return len(path), found
     else:
+        print("Cannot find path between %d , %d" %(src,dest))
         raise ValueError("Invalid Graph")
 
 
@@ -61,14 +72,16 @@ def eprint(*args, **kwargs):
 
 
 def getNewBeliefs(belief,survey_node, survey_res):
+    
     if not survey_res:
         sums = 0.0
+        tmp = [0.0]*len(belief)
         for node in range(0,Environment.getInstance().node_count):
             if node != survey_node:
                 sums += belief[node]
-            else:
-                belief[node]=0
-        belief =  [x/sums for x in belief]
+                tmp[node] = belief[node]
+        # print(belief," --------- ",sums)
+        belief =  [x/sums for x in tmp]
     else:
         if not (Environment.getInstance().noisy_agent and Environment.getInstance().noisy):
             for node in range(0,Environment.getInstance().node_count):
