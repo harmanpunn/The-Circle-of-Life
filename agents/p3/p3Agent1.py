@@ -4,6 +4,8 @@ from environment import Environment
 from util import get_shortest_path
 from valueIteration import getValues, getPolicyFromValues, getProbs
 import random
+from readDump import readDumpFile
+
 
 from time import sleep
 

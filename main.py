@@ -28,63 +28,9 @@ import numpy as np
 from predator import Predator
 from prey import Prey
 
+from helper import processArgs
+
 get_class = lambda x: globals()[x]
-
-def str2bool(v):
-  
-    if v.lower() == "true":
-        return True
-    elif v.lower()=="false":
-        return False
-    else:
-        raise RuntimeError("Invalid value")
-
-def strToAgent(x):
-    if x=="x":
-        return 10
-    else:
-        p = int(x)
-        if p>=1 and p<=9:
-            return p
-        else:
-            raise ValueError()
-
-allowed_args = {
-    "ui":str2bool,
-    "node_count":int,
-    "mode":int,
-    "agent":strToAgent,
-    "noisy":str2bool,
-    "quiet":str2bool,
-    "noisy_agent":str2bool,
-    "graphs":int,
-    "games":int,
-    "p3":str2bool
-}
-
-def processArgs():
-    if len(sys.argv)>1:
-        
-        argv = sys.argv[1:]
-        args = {}
-        for x in argv:
-            if x[0:2]!="--":
-                raise RuntimeError("Args start with '--'")
-            x = x.split('--')[1]
-            
-            if len(x.split("="))!=2:
-                raise RuntimeError("Arg needs single '='")
-            x = x.split("=")
-            if not x[0] in allowed_args.keys():
-                raise RuntimeError("Invalid Argument")
-
-            try:
-                args[x[0]]= allowed_args[x[0]](x[1])
-            except:
-                raise ValueError("Invalid value '"+x[1]+"' for "+x[0])
-        
-        return args    
-    return {}
 
 
 def runGame(graph : Graph, data = None):
@@ -98,27 +44,33 @@ def runGame(graph : Graph, data = None):
     prey = Prey(graph)
     predator = Predator(graph)
 
-    if not Environment.getInstance().p3:
-        if Environment.getInstance().agent % 2 == 0:
-            Environment.getInstance().careful = True
+    
+    if Environment.getInstance().agent % 2 == 0:
+        Environment.getInstance().careful = True
 
-        if Environment.getInstance().agent < 3:
-            agent : GraphEntity = Agent1(graph)
-        elif Environment.getInstance().agent < 5:
-            agent : GraphEntity = Agent3(graph) 
-        elif Environment.getInstance().agent < 7:
-            agent : GraphEntity = Agent5(graph) 
-            agent.belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]
-        else:
-            agent : GraphEntity = Agent7(graph) 
-            agent.predator_belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]        
+    if Environment.getInstance().agent < 3:
+        agent : GraphEntity = Agent1(graph)
+    elif Environment.getInstance().agent < 5:
+        agent : GraphEntity = Agent3(graph) 
+    elif Environment.getInstance().agent < 7:
+        agent : GraphEntity = Agent5(graph) 
+        agent.belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]
+    else:
+        agent : GraphEntity = Agent7(graph) 
+        agent.predator_belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]        
 
-            # agent : GraphEntity = get_class("Agent"+str(Environment.getInstance().agent))(graph)
+        # agent : GraphEntity = get_class("Agent"+str(Environment.getInstance().agent))(graph)
 
-        if Environment.getInstance().agent==9:
-            Environment.getInstance().noisy_agent = True
-            Environment.getInstance().noisy = True
-            Environment.getInstance().careful = True
+    if Environment.getInstance().agent==9:
+        Environment.getInstance().noisy_agent = True
+        Environment.getInstance().noisy = True
+        Environment.getInstance().careful = True
+
+    if Environment.getInstance().agent==10:
+        Environment.getInstance().noisy = False
+        Environment.getInstance().noisy_agent = False
+        Environment.getInstance().careful = True
+        Environment.getInstance().agentX = True
 
         if Environment.getInstance().agent==10:
             Environment.getInstance().noisy = False
