@@ -1,10 +1,19 @@
-from graph import Graph
-from agents.p3.p3Agent1 import P3Agent1
-from environment import Environment
+from neuralflow.model import Model
+import numpy as np
 
-environment = Environment(False,5)
-graph = Graph()
+model = Model(3)
+model.add(5)
+model.add(1)
 
-agent = P3Agent1(graph)
+model.initLayers()
 
-# print(agent.policy)
+print(model.description)
+
+print(model.predict([[1,2,3],[4,5,6]]))
+model.save()
+# model.train_step([[1,2,3],[3,4,5]],np.array([[1],[2]]))
+
+model1 = Model(-1).load()
+
+print(model.description)
+print(model1.description)

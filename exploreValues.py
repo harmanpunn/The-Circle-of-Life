@@ -7,11 +7,15 @@ import math
 import pickle
 import os
 
-Environment(True,50)
+env = Environment(True,50)
 
-filePath = "./test.dump"
+env.explore = True
+
+filePath = "./data-1"
 
 graph = Graph()
+
+print(os.path.exists(filePath))
 
 if not os.path.exists(filePath):
     vals, probs = getValues(graph)

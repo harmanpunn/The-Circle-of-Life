@@ -1,0 +1,29 @@
+100%|██████████| 120050/120050 [00:22<00:00, 5300.37it/s]
+epoch 1/10   error=0.2751754907
+Saving model to ./modelDump/4_8_16_8_4_1plain0
+100%|██████████| 120050/120050 [00:22<00:00, 5261.22it/s]
+epoch 2/10   error=0.1995114853
+Saving model to ./modelDump/4_8_16_8_4_1plain1
+100%|██████████| 120050/120050 [00:23<00:00, 5218.64it/s]
+epoch 3/10   error=0.1519239640
+Saving model to ./modelDump/4_8_16_8_4_1plain2
+100%|██████████| 120050/120050 [00:22<00:00, 5265.31it/s]
+epoch 4/10   error=0.1217533862
+Saving model to ./modelDump/4_8_16_8_4_1plain3
+100%|██████████| 120050/120050 [00:22<00:00, 5272.73it/s]
+epoch 5/10   error=0.1155364006
+Saving model to ./modelDump/4_8_16_8_4_1plain4
+100%|██████████| 120050/120050 [00:22<00:00, 5229.73it/s]
+epoch 6/10   error=0.1150875193
+Saving model to ./modelDump/4_8_16_8_4_1plain5
+100%|██████████| 120050/120050 [00:23<00:00, 5187.90it/s]
+epoch 7/10   error=0.1147651462
+Saving model to ./modelDump/4_8_16_8_4_1plain6
+100%|██████████| 120050/120050 [00:22<00:00, 5221.73it/s]
+epoch 8/10   error=0.1139096993
+Saving model to ./modelDump/4_8_16_8_4_1plain7
+100%|██████████| 120050/120050 [00:22<00:00, 5243.68it/s]
+epoch 9/10   error=0.1141396581
+100%|██████████| 120050/120050 [00:22<00:00, 5267.81it/s]
+epoch 10/10   error=0.1130688256
+Saving model to ./modelDump/4_8_16_8_4_1plain9

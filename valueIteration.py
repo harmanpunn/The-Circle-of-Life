@@ -4,6 +4,7 @@ from environment import Environment
 from graph import Graph
 from util import get_shortest_path
 
+
 # environment = Environment(False,5)
 # graph = Graph()
 
@@ -36,12 +37,15 @@ def getValues(graph: Graph):
         print('p:', p)
         p = 0.0
         # updating for each state
+        newValues = {}
         for state in states:
             # skip game over case
             if state[0]==state[2]:
+                newValues[state] = 9999
                 continue
             # skip win case
             if state[0] == state[1] and state[0]!=state[2]:
+                newValues[state] = 0
                 continue
             min_val = float('inf')
             # for each action to track min action
@@ -55,8 +59,11 @@ def getValues(graph: Graph):
             # accumulating change in each value
             p += (min_val - values[state]) ** 2
             # updating value
-            values[state] = min_val
+            newValues[state] = min_val
+        
+        values = newValues
         i+=1
+    print("Number of iterations: ",i)
     # return all values & transitions
     return values, prob_matrix
 
@@ -83,8 +90,15 @@ def getPolicyFromValues(values, prob_matrix):
     #policy
     return policy
 
-def getProbs(graph: Graph, values):
-    states = values.keys()
+def getProbs(graph: Graph, values = None):
+    states = []
+    if not values is None:
+        states = values.keys()
+    else:
+        for agent in range(0, Environment.getInstance().node_count):
+            for prey in range(0, Environment.getInstance().node_count):
+                for predator in range(0, Environment.getInstance().node_count):
+                    states.append((agent,prey,predator))
     # all transition probabilities
     prob_matrix = {}
     # for all states

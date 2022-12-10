@@ -2,6 +2,7 @@ import sys
 import os
 from time import sleep
 import pandas as pd
+import pickle
 
 from graphEntity import GraphEntity
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
@@ -10,12 +11,17 @@ from environment import Environment
 from graph import Graph
 from renderer import Renderer
 from tqdm import tqdm
+from valueIteration import getPolicyFromValues, getProbs
 import pygame
 
 from agents.p2.agent1 import Agent1
 from agents.p2.agent3 import Agent3
 from agents.p2.agent5 import Agent5
 from agents.p2.agent7 import Agent7
+
+from agents.p3.p3Agent1 import P3Agent1
+from agents.p3.p3Agent1Pred import P3Agent1Pred
+from agents.p3.p3Agent2 import P3Agent2
 
 import numpy as np
 
@@ -27,7 +33,7 @@ from helper import processArgs
 get_class = lambda x: globals()[x]
 
 
-def runGame(graph : Graph):
+def runGame(graph : Graph, data = None):
 
     # graph = Graph()
     renderer =  Renderer(graph)
@@ -38,34 +44,48 @@ def runGame(graph : Graph):
     prey = Prey(graph)
     predator = Predator(graph)
 
-    
-    if Environment.getInstance().agent % 2 == 0:
-        Environment.getInstance().careful = True
+    if not Environment.getInstance().p3:
+        if Environment.getInstance().agent % 2 == 0:
+            Environment.getInstance().careful = True
 
-    if Environment.getInstance().agent < 3:
-        agent : GraphEntity = Agent1(graph)
-    elif Environment.getInstance().agent < 5:
-        agent : GraphEntity = Agent3(graph) 
-    elif Environment.getInstance().agent < 7:
-        agent : GraphEntity = Agent5(graph) 
-        agent.belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]
+        if Environment.getInstance().agent < 3:
+            agent : GraphEntity = Agent1(graph)
+        elif Environment.getInstance().agent < 5:
+            agent : GraphEntity = Agent3(graph) 
+        elif Environment.getInstance().agent < 7:
+            agent : GraphEntity = Agent5(graph) 
+            agent.belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]
+        else:
+            agent : GraphEntity = Agent7(graph) 
+            agent.predator_belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]        
+
+            # agent : GraphEntity = get_class("Agent"+str(Environment.getInstance().agent))(graph)
+
+        if Environment.getInstance().agent==9:
+            Environment.getInstance().noisy_agent = True
+            Environment.getInstance().noisy = True
+            Environment.getInstance().careful = True
+
+        if Environment.getInstance().agent==10:
+            Environment.getInstance().noisy = False
+            Environment.getInstance().noisy_agent = False
+            Environment.getInstance().careful = True
+            Environment.getInstance().agentX = True
+
+            if Environment.getInstance().agent==10:
+                Environment.getInstance().noisy = False
+                Environment.getInstance().noisy_agent = False
+                Environment.getInstance().careful = True
+                Environment.getInstance().agentX = True
     else:
-        agent : GraphEntity = Agent7(graph) 
-        agent.predator_belief = [1.0 if i==predator.getPosition() else 0.0 for i in range(0,Environment.getInstance().node_count)]        
-
-        # agent : GraphEntity = get_class("Agent"+str(Environment.getInstance().agent))(graph)
-
-    if Environment.getInstance().agent==9:
-        Environment.getInstance().noisy_agent = True
-        Environment.getInstance().noisy = True
-        Environment.getInstance().careful = True
-
-    if Environment.getInstance().agent==10:
-        Environment.getInstance().noisy = False
-        Environment.getInstance().noisy_agent = False
-        Environment.getInstance().careful = True
-        Environment.getInstance().agentX = True
-
+        if Environment.getInstance().agent==1:
+            agent : GraphEntity = P3Agent1(graph,vals=data["vals"])
+        elif Environment.getInstance().agent==2:
+            agent : GraphEntity = P3Agent1Pred(graph)
+            agent.values = data["vals"]
+        elif Environment.getInstance().agent==3:
+            agent : GraphEntity = P3Agent2(graph)
+            agent.vals = data["vals"]
 
     running = 1
 
@@ -86,20 +106,31 @@ def runGame(graph : Graph):
             graph.surveyed = False
 
             info = {}
-            if Environment.getInstance().agent<3:
-                info = {
-                    'prey' : prey.getPosition(),
-                    'predator' : predator.getPosition()
-                }
-            elif Environment.getInstance().agent<5:
-                info = {
-                    'predator' : predator.getPosition()
-                }
-            elif Environment.getInstance().agent<7:
-                info = {
-                    'prey' : prey.getPosition()
-                }
-           
+            if not Environment.getInstance().p3:
+                if Environment.getInstance().agent<3:
+                    info = {
+                        'prey' : prey.getPosition(),
+                        'predator' : predator.getPosition()
+                    }
+                elif Environment.getInstance().agent<5:
+                    info = {
+                        'predator' : predator.getPosition()
+                    }
+                elif Environment.getInstance().agent<7:
+                    info = {
+                        'prey' : prey.getPosition()
+                    }
+            else:
+                if Environment.getInstance().agent <3:
+                    info = {
+                        'prey' : prey.getPosition(),
+                        'predator' : predator.getPosition()
+                    }
+                else:
+                    info = {
+                        # 'prey' : prey.getPosition(),
+                        'predator' : predator.getPosition()
+                    }
 
             graph.node_states_blocked= True
             knows = agent.__update__(graph, info)
@@ -143,7 +174,7 @@ def runGame(graph : Graph):
         pygame.quit()
     return [step_count, game_state, knownRounds]  
 
-def collectData() -> None:
+def collectData(cached= False,path=None) -> None:
     stats_dict = dict()
     step_count_list = {0:0.0,1:0.0,-1:0.0}
     game_state_list = list()
@@ -151,10 +182,16 @@ def collectData() -> None:
     totalConfidences = [[],[]]
     for i in  tqdm(range(0,Environment.getInstance().graphs)):
         graph = Graph()
+        vals = None
+        if cached:
+            if Environment.getInstance().agent!=2:
+                graph.info, vals = pickle.load(open(path+str(i+1),"rb"))
+            else:
+                graph.info, vals = pickle.load(open("data-1","rb"))
         type = i
         confidencePerGraph = [0.0,0.0] 
         for _ in tqdm(range(0,Environment.getInstance().games),leave=False):
-            [step_count, game_state, confidence] = runGame(graph) 
+            [step_count, game_state, confidence] = runGame(graph,{"vals":vals}) 
             step_count_list[game_state]+=step_count
             game_state_list.append(game_state)
             type_list.append(type)
@@ -214,9 +251,16 @@ if __name__ == "__main__":
     if 'mode' in args.keys() and args['mode']==1:
         print("Mode different")
         Environment.getInstance().ui = False
-        collectData()
+        if not Environment.getInstance().p3:
+            collectData()
+        else:
+            collectData(True,"./datadump/data-")
     else:
         graph = Graph()
-        runGame(graph)
+
+        if Environment.getInstance().p3:
+            x = pickle.load(open("data-1","rb"))
+            graph.info = x[0]
+        runGame(graph,{"vals":x[1]})
 
 
