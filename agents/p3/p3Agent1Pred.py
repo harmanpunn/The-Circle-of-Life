@@ -23,7 +23,7 @@ class P3Agent1Pred(GraphEntity):
                 break
         graph.allocate_pos(self.position, self.type)
 
-        self.uModel = Model(-1).load("./modelDump/4_8_16_8_4_1plain9")
+        self.uModel = Model(-1).load("./modelDump/VModel")
         self.uModel.training = False
         self.values = None
         print("Initialised!")
