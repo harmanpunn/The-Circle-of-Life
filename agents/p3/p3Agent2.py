@@ -93,4 +93,10 @@ class P3Agent2(GraphEntity):
                 self.nextPosition = action
         
         self.belief = transitions
+
+        
+        max_val = max(self.belief)
+        max_beliefs = [i for i, v in enumerate(self.belief) if v==max_val]
+        prey = random.choice(max_beliefs)
+        Environment.getInstance().expected_prey = max_beliefs
         return knows
