@@ -154,6 +154,8 @@ class Model:
     def load(self,path="./checkpoint"):
         if not os.path.exists(path):
             raise ValueError("Path does not exist")
+
+        print("Loading model from ",path)
         
         dump = pickle.load(open(path,"rb")) 
         self.description = dump["desc"]
