@@ -23,7 +23,7 @@ class P3Agent1Pred(GraphEntity):
                 break
         graph.allocate_pos(self.position, self.type)
 
-        self.uModel = Model(-1).load("./modelDump/VModel")
+        self.uModel = Model(-1).load("./modelDump/VModel").use()
         self.uModel.training = False
         self.values = None
         print("Initialised!")
@@ -32,13 +32,13 @@ class P3Agent1Pred(GraphEntity):
         dt = [[]]
         x = get_shortest_path(graph.info,s_prime[0],s_prime[1],find = s_prime[2])
         y = get_shortest_path(graph.info,s_prime[0],s_prime[2],find = s_prime[1])
-        print(x,y)
         dt[0].append(y[0])
         dt[0].append(x[0])
         dt[0].append(y[1])
         dt[0].append(x[1])
         dt = np.array([dt])
         p = self.uModel.predict(dt)[0][0][0]
+        print(dt," actual: ",self.values[s_prime],"; Predicted: ",p," : ",self.uModel.loss(self.values[s_prime],p))
         return p
 
     def plan(self, graph: Graph, info):

@@ -24,9 +24,9 @@ class Agent1(GraphEntity):
         predator = info['predator']
         graphInfo = graph.info
         # neighbor_list = graph[self.position]
-        print('Agent Pos Curr:', self.position)
-        print('Prey Position:', prey)
-        print('Predator Position:', predator)
+        # print('Agent Pos Curr:', self.position)
+        # print('Prey Position:', prey)
+        # print('Predator Position:', predator)
         self.nextPosition = Agent1.get_next_position(prey, predator, graphInfo, self.position)
         return [1,1]
         # self.move(graph)
@@ -34,14 +34,14 @@ class Agent1(GraphEntity):
     @staticmethod
     def get_next_position(prey, predator, graphInfo, curr_agent):
         agent_shortest_dist_prey = get_shortest_path(graphInfo, curr_agent, prey)
-        print('agent_shortest_dist_prey:', agent_shortest_dist_prey)
+        # print('agent_shortest_dist_prey:', agent_shortest_dist_prey)
         # Shortest Path to predator
         if Environment.getInstance().agent>5 and Environment.getInstance().careful :
             agent_shortest_dist_predator = Agent1.getExpectedDist(graphInfo,predator,curr_agent)
         else:
             agent_shortest_dist_predator = get_shortest_path(graphInfo, curr_agent, predator)
 
-        print('agent_shortest_dist_predator:', agent_shortest_dist_predator)
+        # print('agent_shortest_dist_predator:', agent_shortest_dist_predator)
 
         neighbor_list = graphInfo[curr_agent]
         lookup_table = dict()
@@ -59,14 +59,14 @@ class Agent1(GraphEntity):
             # Updating the lookup table
             lookup_table[el] = [path_len_to_predator, path_len_to_prey]
 
-        print('curr_agent_pos:',curr_agent)
-        print('lookup_table: ', lookup_table)
+        # print('curr_agent_pos:',curr_agent)
+        # print('lookup_table: ', lookup_table)
 
-        print("RUNNNNNNN!")
+        # print("RUNNNNNNN!")
         order_list = [[] for _ in range(0,6)]
         close_to_prey = []
         for key in lookup_table:
-            print(key ,'->',lookup_table[key] ) 
+            # print(key ,'->',lookup_table[key] ) 
             # Neighbor that is closer to Prey and farther from the Predator.
             if (lookup_table[key][1] < agent_shortest_dist_prey and  
                 lookup_table[key][0] > agent_shortest_dist_predator):
@@ -99,7 +99,7 @@ class Agent1(GraphEntity):
             if (lookup_table[key][1] <= agent_shortest_dist_prey):
                 close_to_prey.append(key)
 
-        print(order_list)
+        # print(order_list)
         ls = [item for item in order_list if len(item)!=0]
         if Environment.getInstance().careful and len(ls)==0:
             if len(close_to_prey) ==0:
@@ -107,8 +107,8 @@ class Agent1(GraphEntity):
             return random.choice(close_to_prey)
         if len(ls)==0:
             return curr_agent
-        # print('order_list:', order_list)
-        # print('first item:', ls[0])
+        # # print('order_list:', order_list)
+        # # print('first item:', ls[0])
         return random.choice(ls[0])
 
     @staticmethod

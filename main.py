@@ -22,6 +22,7 @@ from agents.p2.agent7 import Agent7
 from agents.p3.p3Agent1 import P3Agent1
 from agents.p3.p3Agent1Pred import P3Agent1Pred
 from agents.p3.p3Agent2 import P3Agent2
+from agents.p3.p3Agent2Pred import P3Agent2Pred
 
 import numpy as np
 
@@ -86,6 +87,9 @@ def runGame(graph : Graph, data = None):
         elif Environment.getInstance().agent==3:
             agent : GraphEntity = P3Agent2(graph)
             agent.vals = data["vals"]
+        elif Environment.getInstance().agent==4:
+            agent : GraphEntity = P3Agent2Pred(graph,filePath="./modelDump/VPartialModel")
+            agent.training = False
 
     running = 1
 
@@ -184,10 +188,7 @@ def collectData(cached= False,path=None) -> None:
         graph = Graph()
         vals = None
         if cached:
-            if Environment.getInstance().agent!=2:
-                graph.info, vals = pickle.load(open(path+str(i+1),"rb"))
-            else:
-                graph.info, vals = pickle.load(open("data-1","rb"))
+            graph.info, vals = pickle.load(open("data-1","rb"))
         type = i
         confidencePerGraph = [0.0,0.0] 
         for _ in tqdm(range(0,Environment.getInstance().games),leave=False):
