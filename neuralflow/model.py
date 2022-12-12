@@ -83,6 +83,16 @@ class Model:
             result.append(output)
 
         return result
+    
+    def singleFit(self,x,y,learning_rate=0.001):
+        output = x
+        for layer in self.layers:
+            output = layer.forward_propagation(output)
+
+        # backward propagation
+        error = self.loss_prime(y, output)
+        for layer in reversed(self.layers):
+            error = layer.backward_propagation(error, learning_rate)
 
     # train the network
     def fit(self, x_train, y_train, epochs=1, quiet= False, learning_rate=0.001,validation_data = None,save=False,filePath = None,fromEpoch = 0):
@@ -112,8 +122,6 @@ class Model:
                 #     dat["val_loss"] = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
 
                 # bar.set_postfix(dat)
-                if math.isnan(err):
-                    raise ValueError("Issue with your parameters :)")
 
                 # backward propagation
                 error = self.loss_prime(y_train[j], output)
@@ -123,6 +131,8 @@ class Model:
             # calculate average error on all samples
             # print(err)
             err = self.loss(y_train, np.array(preds))
+            if math.isnan(err):
+                raise ValueError("Issue with your parameters :)")
             if not validation_data is None:
                 valErr = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
                 if not quiet:
