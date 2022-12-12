@@ -1,13 +1,18 @@
 import sys
 from environment import Environment
 
-def get_shortest_path(graph, src, dest,find = -1):
+def get_shortest_path(graph, src, dest,find = -1,returnPath=False):
     # print('src:',src)
     # print('dest:',dest)
     if src == dest:
         if find==-1:
-            return 0
+            if returnPath:
+                return 0, []
+            else:
+                return 0
         else:
+            if returnPath:
+                return 0,dest==find, []
             return 0, dest==find
     distance = []
     predecessor = list()
@@ -34,9 +39,15 @@ def get_shortest_path(graph, src, dest,find = -1):
         # print('New Position:', path[len(path) - 2])
         # print("find:",find)
         if find==-1:
-            return len(path)
+            if not returnPath:
+                return len(path)
+            else:
+                return len(path),path
         else:
-            return len(path), found
+            if not returnPath:
+                return len(path), found
+            else:
+                return len(path), found, path
     else:
         print("Cannot find path between %d , %d" %(src,dest))
         raise ValueError("Invalid Graph")

@@ -46,49 +46,32 @@ class P3Agent2Pred(GraphEntity):
     
     def getInputFromState(self,graph,state):
         dt = [[0,0,0,0]]
-        dt[0][0] = get_shortest_path(graph,state[0],state[1])
+        dt[0][0], path = get_shortest_path(graph,state[0],state[1],returnPath=True)
         # calculating Expected prey distance & parameters
         for i in range(0,len(state[2])):
             x = get_shortest_path(graph,state[0],i,find=state[1])
-            y = get_shortest_path(graph,state[0],state[1],find=i)
-
+            y = 1 if i in path else 0
             # expected prey distance
             dt[0][1] += state[2][i]*x[0]
             # expected prey in pred path
-            dt[0][2] += state[2][i]*y[1]
+            dt[0][2] += state[2][i]*y
             # expected pred in prey path
             dt[0][3] += state[2][i]*x[1]
         
-        return np.array(dt)
+        return np.array([dt])
     
     def store(self,graph,state,value):
-        self.databaseX.append(self.getInputFromState(graph,state))
-        self.databaseY.append(np.array([[value]]))
-    
+        if self.training:
+            self.databaseX.append(self.getInputFromState(graph,state))
+            self.databaseY.append(np.array([[value]]))
 
-    def train(self, epochs =5, path = None):
-        print("Training Model")
-        # Don't update NN if not training 
-        if not self.training:
-            return
-
-        self.databaseX = np.array(self.databaseX)
-        self.databaseY = np.array(self.databaseY)
-
-        print(np.min(self.databaseY)," < ",np.max(self.databaseY))
-        
-        self.uModel.fit(self.databaseX,self.databaseY,epochs= epochs,fromEpoch=self.fromEpoch,save=(not path is None),filePath=path)
-        self.fromEpoch += epochs
-        self.databaseX = []
-        self.databaseY = []
-
-    def getValueOfState(self,tmpState):
+    def getValueOfState(self,graph,tmpState):
         if tmpState[0]==tmpState[1]:
             # if terminal state
             return 9999
         # use model to process
-
-        return 0.0
+        dt= self.getInputFromState(graph,tmpState)
+        return self.uModel.predict(dt)[0][0][0]
 
         
 
@@ -149,10 +132,9 @@ class P3Agent2Pred(GraphEntity):
                     for p in range(len(transitions)):
                         valOfTmpState += transitions[p]* self.vals[(action,p,pred)]
                 else:
-                    valOfTmpState = self.getValueOfState(tmpState)
+                    valOfTmpState = self.getValueOfState(graph.info,tmpState)
                 valOfAction += probOfStateTransition * valOfTmpState
-
-            self.store(graph.info,tmpState,valOfAction)
+                self.store(graph.info,tmpState,valOfTmpState)
 
             if valOfAction < mnVal:
                 mnVal = valOfAction
