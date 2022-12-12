@@ -15,7 +15,7 @@ class P3Agent2Pred(GraphEntity):
 
     someBigNumber = 200
 
-    def __init__(self, graph: Graph, description = None,filePath = None) -> None:
+    def __init__(self, graph: Graph, description = None,filePath = None,useV = False) -> None:
         self.node_count = Environment.getInstance().node_count
         self.type = 1
         while True:
@@ -34,15 +34,19 @@ class P3Agent2Pred(GraphEntity):
         self.databaseY = []
         self.fromEpoch = 0
 
-        if description is None and filePath is None:
-            raise RuntimeError("Wrong initialisation of Agent")
-        
-        if description is not None:
-            self.uModel = Model(4)
-            self.uModel.description =description
-            self.uModel.use().initLayers()
+        self.useV  = useV
+        if not useV:
+            if description is None and filePath is None:
+                raise RuntimeError("Wrong initialisation of Agent")
+            
+            if description is not None:
+                self.uModel = Model(4)
+                self.uModel.description =description
+                self.uModel.use().initLayers()
+            else:
+                self.uModel = Model(-1).load(filePath).use()
         else:
-            self.uModel = Model(-1).load(filePath).use()
+            self.uModel = Model(-1).load("./modelDump/VModel")
     
     def getInputFromState(self,graph,state):
         dt = [[0,0,0,0]]
@@ -130,7 +134,19 @@ class P3Agent2Pred(GraphEntity):
                 valOfTmpState = 0.0
                 if self.training:
                     for p in range(len(transitions)):
-                        valOfTmpState += transitions[p]* self.vals[(action,p,pred)]
+                        if not self.useV:
+                            valOfTmpState += transitions[p]* self.vals[(action,p,pred)]
+                        else:
+                            dt = [[]]
+                            x = get_shortest_path(graph.info,action,p,find = pred)
+                            y = get_shortest_path(graph.info,action,pred,find = p)
+                            dt[0].append(y[0])
+                            dt[0].append(x[0])
+                            dt[0].append(y[1])
+                            dt[0].append(x[1])
+                            dt = np.array([dt])
+                            predictedValue = self.uModel.predict(dt)[0][0][0]
+                            valOfTmpState += transitions[p]*predictedValue
                 else:
                     valOfTmpState = self.getValueOfState(graph.info,tmpState)
                 valOfAction += probOfStateTransition * valOfTmpState

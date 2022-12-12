@@ -90,6 +90,9 @@ def runGame(graph : Graph, data = None):
         elif Environment.getInstance().agent==4:
             agent : GraphEntity = P3Agent2Pred(graph,filePath="./modelDump/VPartialModel")
             agent.training = False
+        elif Environment.getInstance().agent==5:
+            agent : GraphEntity = P3Agent2Pred(graph,useV=True)
+            agent.training = False
 
     running = 1
 
@@ -180,7 +183,7 @@ def runGame(graph : Graph, data = None):
 
 def collectData(cached= False,path=None) -> None:
     stats_dict = dict()
-    step_count_list = {0:0.0,1:0.0,-1:0.0}
+    step_count_list = {0:[],1:[],-1:[]}
     game_state_list = list()
     type_list = list()
     totalConfidences = [[],[]]
@@ -193,7 +196,7 @@ def collectData(cached= False,path=None) -> None:
         confidencePerGraph = [0.0,0.0] 
         for _ in tqdm(range(0,Environment.getInstance().games),leave=False):
             [step_count, game_state, confidence] = runGame(graph,{"vals":vals}) 
-            step_count_list[game_state]+=step_count
+            step_count_list[game_state].append(step_count)
             game_state_list.append(game_state)
             type_list.append(type)
             confidencePerGraph = [confidencePerGraph[i]+ confidence[i] for i in range(0, len(confidence))]
@@ -204,8 +207,10 @@ def collectData(cached= False,path=None) -> None:
         
     
     for k in step_count_list:
-        step_count_list[k] /= Environment.getInstance().games * Environment.getInstance().graphs
-    
+        if len(step_count_list[k])!=0:
+            step_count_list[k] = "Mean:"+ str(np.array(step_count_list[k]).mean()) +" || Std: "+str(np.array(step_count_list[k]).std())
+        else:
+            step_count_list[k] = "N/A"
     for t in totalConfidences:
         t = np.array(t)
         
