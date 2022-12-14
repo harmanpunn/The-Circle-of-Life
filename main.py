@@ -23,6 +23,10 @@ from agents.p3.p3Agent1 import P3Agent1
 from agents.p3.p3Agent1Pred import P3Agent1Pred
 from agents.p3.p3Agent2 import P3Agent2
 from agents.p3.p3Agent2Pred import P3Agent2Pred
+from agents.p3.p3AgentQ import P3AgentQ
+
+from neuralflow.model import Model
+from neuralflow.activation import ActivationFunction
 
 import numpy as np
 
@@ -91,8 +95,18 @@ def runGame(graph : Graph, data = None):
             agent : GraphEntity = P3Agent2Pred(graph,filePath="./modelDump/VPartialModel")
             agent.training = False
         elif Environment.getInstance().agent==5:
-            agent : GraphEntity = P3Agent2Pred(graph,useV=True)
-            agent.training = False
+            agent : GraphEntity = P3Agent2(graph,useV=True,filePath="./modelDump/VModel")
+        elif Environment.getInstance().agent==6:
+            qModel = Model(4)
+            qModel.add(8,ActivationFunction.leakyrelu)
+            qModel.add(16,ActivationFunction.leakyrelu)
+            qModel.add(8,ActivationFunction.leakyrelu)
+            qModel.add(4,ActivationFunction.leakyrelu)
+            qModel.add(1,ActivationFunction.leakyrelu)
+            qModel.use().initLayers()
+            agent : GraphEntity = P3AgentQ(graph,model=qModel)
+            agent.training =  True
+
 
     running = 1
 

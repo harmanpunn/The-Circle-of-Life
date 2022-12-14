@@ -100,7 +100,7 @@ class Model:
         samples = len(x_train)
 
         lossHistory = []
-        epochBar = range(epochs) if not quiet else tqdm(range(epochs))
+        epochBar = range(epochs)
         # training loop
         for i in epochBar:
             err = 0
@@ -113,15 +113,7 @@ class Model:
                     output = layer.forward_propagation(output)
 
                 # compute loss (for display purpose only)
-                # err += self.loss(y_train[j], output)
                 preds.append(output)
-                # dat = {
-                #     "training_loss":err/(j+1)
-                # }
-                # if not validation_data is None:
-                #     dat["val_loss"] = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
-
-                # bar.set_postfix(dat)
 
                 # backward propagation
                 error = self.loss_prime(y_train[j], output)

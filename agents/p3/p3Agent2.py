@@ -5,7 +5,8 @@ from util import get_shortest_path
 from valueIteration import getValues, getPolicyFromValues
 import random
 from util import getNewBeliefs, transitionProbabilities
-
+from neuralflow.model import Model
+import numpy as np
 from time import sleep
 
 
@@ -13,7 +14,7 @@ class P3Agent2(GraphEntity):
 
     someBigNumber = 200
 
-    def __init__(self, graph: Graph) -> None:
+    def __init__(self, graph: Graph,useV = False,filePath = None) -> None:
         self.node_count = Environment.getInstance().node_count
         self.type = 1
         while True:
@@ -23,10 +24,39 @@ class P3Agent2(GraphEntity):
         graph.allocate_pos(self.position, self.type)
 
         self.vals = None
+        self.uModel = None
+        self.useV = useV
+        if useV:
+            self.uModel = Model(-1)
+            self.uModel.load(filePath).use()
 
 
 
         self.belief = [1.0/self.node_count]*self.node_count
+    
+    def getInputFromState(self,graph,state):
+        dt = [[0,0,0,0]]
+        dt[0][0], path = get_shortest_path(graph,state[0],state[1],returnPath=True)
+        # calculating Expected prey distance & parameters
+        for i in range(0,len(state[2])):
+            x = get_shortest_path(graph,state[0],i,find=state[1])
+            y = 1 if i in path else 0
+            # expected prey distance
+            dt[0][1] += state[2][i]*x[0]
+            # expected prey in pred path
+            dt[0][2] += state[2][i]*y
+            # expected pred in prey path
+            dt[0][3] += state[2][i]*x[1]
+        
+        return np.array([dt])
+    def getValueOfState(self,graph,tmpState):
+        if tmpState[0]==tmpState[1]:
+            # if terminal state
+            return 9999
+        # use model to process
+        dt= self.getInputFromState(graph,tmpState)
+        return self.uModel.predict(dt)[0][0][0]
+
 
 
     def plan(self, graph: Graph, info):
@@ -84,7 +114,10 @@ class P3Agent2(GraphEntity):
 
                 valOfTmpState = 0.0
                 for p in range(len(transitions)):
-                    valOfTmpState += transitions[p]* self.vals[(action,p,pred)]
+                    if self.useV:
+                        valOfTmpState += transitions[p]* self.getValueOfState(graph.info,tmpState)
+                    else:
+                        valOfTmpState += transitions[p]* self.vals[(action,p,pred)]
 
                 valOfAction += probOfStateTransition * valOfTmpState
 

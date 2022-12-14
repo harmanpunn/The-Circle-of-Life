@@ -15,7 +15,7 @@ class P3Agent2Pred(GraphEntity):
 
     someBigNumber = 200
 
-    def __init__(self, graph: Graph, description = None,filePath = None,useV = False) -> None:
+    def __init__(self, graph: Graph, description = None,filePath = None,qModel = False) -> None:
         self.node_count = Environment.getInstance().node_count
         self.type = 1
         while True:
@@ -29,24 +29,21 @@ class P3Agent2Pred(GraphEntity):
         self.belief = [1.0/self.node_count]*self.node_count
 
         self.training = True
+        self.qModel = qModel
 
         self.databaseX = []
         self.databaseY = []
         self.fromEpoch = 0
 
-        self.useV  = useV
-        if not useV:
-            if description is None and filePath is None:
-                raise RuntimeError("Wrong initialisation of Agent")
-            
-            if description is not None:
-                self.uModel = Model(4)
-                self.uModel.description =description
-                self.uModel.use().initLayers()
-            else:
-                self.uModel = Model(-1).load(filePath).use()
+        if description is None and filePath is None:
+            raise RuntimeError("Wrong initialisation of Agent")
+        
+        if description is not None:
+            self.uModel = Model(4)
+            self.uModel.description =description
+            self.uModel.use().initLayers()
         else:
-            self.uModel = Model(-1).load("./modelDump/VModel")
+            self.uModel = Model(-1).load(filePath).use()
     
     def getInputFromState(self,graph,state):
         dt = [[0,0,0,0]]
@@ -66,8 +63,12 @@ class P3Agent2Pred(GraphEntity):
     
     def store(self,graph,state,value):
         if self.training:
-            self.databaseX.append(self.getInputFromState(graph,state))
-            self.databaseY.append(np.array([[value]]))
+            if not self.qModel:
+                self.databaseX.append(self.getInputFromState(graph,state))
+                self.databaseY.append(np.array([[value]]))
+            else:
+                self.databaseX.append(state)
+
 
     def getValueOfState(self,graph,tmpState):
         if tmpState[0]==tmpState[1]:
@@ -129,24 +130,12 @@ class P3Agent2Pred(GraphEntity):
 
             valOfAction = 1
             for pred in predator_options:
-                tmpState = (action, pred, transitions)
+                tmpState = [action, pred, transitions]
                 probOfStateTransition = (0.6*(1/len(predator_close) if pred in predator_close else 0.0)+0.4/len(predator_options))  # prob of pred movement
                 valOfTmpState = 0.0
                 if self.training:
                     for p in range(len(transitions)):
-                        if not self.useV:
-                            valOfTmpState += transitions[p]* self.vals[(action,p,pred)]
-                        else:
-                            dt = [[]]
-                            x = get_shortest_path(graph.info,action,p,find = pred)
-                            y = get_shortest_path(graph.info,action,pred,find = p)
-                            dt[0].append(y[0])
-                            dt[0].append(x[0])
-                            dt[0].append(y[1])
-                            dt[0].append(x[1])
-                            dt = np.array([dt])
-                            predictedValue = self.uModel.predict(dt)[0][0][0]
-                            valOfTmpState += transitions[p]*predictedValue
+                        valOfTmpState += transitions[p]* self.vals[(action,p,pred)]
                 else:
                     valOfTmpState = self.getValueOfState(graph.info,tmpState)
                 valOfAction += probOfStateTransition * valOfTmpState
