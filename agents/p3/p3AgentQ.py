@@ -11,11 +11,11 @@ import numpy as np
 from time import sleep
 
 
-class P3Agent2Pred(GraphEntity):
+class P3AgentQ(GraphEntity):
 
     someBigNumber = 200
 
-    def __init__(self, graph: Graph, description = None,filePath = None,qModel = False) -> None:
+    def __init__(self, graph: Graph, description = None,filePath = None) -> None:
         self.node_count = Environment.getInstance().node_count
         self.type = 1
         while True:
@@ -29,7 +29,6 @@ class P3Agent2Pred(GraphEntity):
         self.belief = [1.0/self.node_count]*self.node_count
 
         self.training = True
-        self.qModel = qModel
 
         self.databaseX = []
         self.databaseY = []
@@ -63,12 +62,8 @@ class P3Agent2Pred(GraphEntity):
     
     def store(self,graph,state,value):
         if self.training:
-            if not self.qModel:
-                self.databaseX.append(self.getInputFromState(graph,state))
-                self.databaseY.append(np.array([[value]]))
-            else:
-                self.databaseX.append(state)
-
+            self.databaseX.append(self.getInputFromState(graph,state))
+            self.databaseY.append(np.array([[value]]))
 
     def getValueOfState(self,graph,tmpState):
         if tmpState[0]==tmpState[1]:
@@ -130,7 +125,7 @@ class P3Agent2Pred(GraphEntity):
 
             valOfAction = 1
             for pred in predator_options:
-                tmpState = [action, pred, transitions]
+                tmpState = (action, pred, transitions)
                 probOfStateTransition = (0.6*(1/len(predator_close) if pred in predator_close else 0.0)+0.4/len(predator_options))  # prob of pred movement
                 valOfTmpState = 0.0
                 if self.training:

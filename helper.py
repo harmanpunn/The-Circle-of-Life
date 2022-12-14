@@ -12,6 +12,8 @@ def str2bool(v):
 def strToAgent(x):
     if x=="x":
         return 10
+    elif x=="q":
+        return 6
     else:
         p = int(x)
         if p>=1 and p<=9:

@@ -1,0 +1,56 @@
+================================
+U-Star
+========== GAME STATS ==========
+Predator confidence : Mean:  1.0  || Standard Deviation:  0.0
+Prey confidence : Mean:  1.0  || Standard Deviation:  0.0
+Win Step Counts:  Mean:9.411333333333333 || Std: 5.362226361834752
+Win %:  100.0
+Lose Step Count:  N/A
+Lose %:  0.0
+Timeout Step Count:  N/A
+Timeout %:  0.0
+================================
+V Model
+========== GAME STATS ==========
+Predator confidence : Mean:  1.0  || Standard Deviation:  0.0
+Prey confidence : Mean:  1.0  || Standard Deviation:  0.0
+Win Step Counts:  Mean:9.356666666666667 || Std: 5.150092771548446
+Win %:  100.0
+Lose Step Count:  N/A
+Lose %:  0.0
+Timeout Step Count:  N/A
+Timeout %:  0.0
+================================
+UPartial with U*
+========== GAME STATS ==========                                                                                                                                                                                 
+Predator confidence : Mean:  1.0  || Standard Deviation:  0.0
+Prey confidence : Mean:  0.08143028948983201  || Standard Deviation:  0.009252169049770768
+Win Step Counts:  Mean:36.538 || Std: 32.33609782683536
+Win %:  100.0
+Lose Step Count:  N/A
+Lose %:  0.0
+Timeout Step Count:  N/A
+Timeout %:  0.0
+================================
+VPartial
+========== GAME STATS ==========                                                                                                                                                                                 
+Predator confidence : Mean:  1.0  || Standard Deviation:  0.0
+Prey confidence : Mean:  0.08046156017989907  || Standard Deviation:  0.009370660843281782
+Win Step Counts:  Mean:36.61966666666667 || Std: 30.56652329846421
+Win %:  100.0
+Lose Step Count:  N/A
+Lose %:  0.0
+Timeout Step Count:  N/A
+Timeout %:  0.0
+================================
+UPartial with V
+========== GAME STATS ==========                                                                                                                                                                                 
+Predator confidence : Mean:  1.0  || Standard Deviation:  0.0
+Prey confidence : Mean:  0.07975108973309929  || Standard Deviation:  0.009916540112726328
+Win Step Counts:  Mean:37.114 || Std: 31.31365523218265
+Win %:  100.0
+Lose Step Count:  N/A
+Lose %:  0.0
+Timeout Step Count:  N/A
+Timeout %:  0.0
+================================
