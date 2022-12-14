@@ -83,6 +83,16 @@ class Model:
             result.append(output)
 
         return result
+    
+    def singleFit(self,x,y,learning_rate=0.001):
+        output = x
+        for layer in self.layers:
+            output = layer.forward_propagation(output)
+
+        # backward propagation
+        error = self.loss_prime(y, output)
+        for layer in reversed(self.layers):
+            error = layer.backward_propagation(error, learning_rate)
 
     # train the network
     def fit(self, x_train, y_train, epochs=1, quiet= False, learning_rate=0.001,validation_data = None,save=False,filePath = None,fromEpoch = 0):
@@ -90,7 +100,7 @@ class Model:
         samples = len(x_train)
 
         lossHistory = []
-        epochBar = range(epochs) if not quiet else tqdm(range(epochs))
+        epochBar = range(epochs)
         # training loop
         for i in epochBar:
             err = 0
@@ -103,17 +113,7 @@ class Model:
                     output = layer.forward_propagation(output)
 
                 # compute loss (for display purpose only)
-                # err += self.loss(y_train[j], output)
                 preds.append(output)
-                # dat = {
-                #     "training_loss":err/(j+1)
-                # }
-                # if not validation_data is None:
-                #     dat["val_loss"] = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
-
-                # bar.set_postfix(dat)
-                if math.isnan(err):
-                    raise ValueError("Issue with your parameters :)")
 
                 # backward propagation
                 error = self.loss_prime(y_train[j], output)
@@ -123,6 +123,8 @@ class Model:
             # calculate average error on all samples
             # print(err)
             err = self.loss(y_train, np.array(preds))
+            if math.isnan(err):
+                raise ValueError("Issue with your parameters :)")
             if not validation_data is None:
                 valErr = self.loss(validation_data[0],np.array(self.predict(validation_data[1])))
                 if not quiet:
@@ -154,6 +156,8 @@ class Model:
     def load(self,path="./checkpoint"):
         if not os.path.exists(path):
             raise ValueError("Path does not exist")
+
+        print("Loading model from ",path)
         
         dump = pickle.load(open(path,"rb")) 
         self.description = dump["desc"]
