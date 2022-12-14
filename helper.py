@@ -29,7 +29,8 @@ allowed_args = {
     "noisy_agent":str2bool,
     "graphs":int,
     "games":int,
-    "p3":str2bool
+    "p3":str2bool,
+    "distracted":str2bool
 }
 
 def processArgs():
