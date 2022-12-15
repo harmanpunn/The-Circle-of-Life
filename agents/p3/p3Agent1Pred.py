@@ -4,6 +4,7 @@ from environment import Environment
 from util import get_shortest_path
 from valueIteration import getProbs
 from neuralflow.model import Model
+from neuralflow.activation import ActivationFunction
 import numpy as np
 import random
 

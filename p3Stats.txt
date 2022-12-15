@@ -44,10 +44,21 @@ Timeout Step Count:  N/A
 Timeout %:  0.0
 ================================
 UPartial with V
-========== GAME STATS ==========                                                                                                                                                                                 
+========== GAME STATS ==========
 Predator confidence : Mean:  1.0  || Standard Deviation:  0.0
-Prey confidence : Mean:  0.07975108973309929  || Standard Deviation:  0.009916540112726328
-Win Step Counts:  Mean:37.114 || Std: 31.31365523218265
+Prey confidence : Mean:  0.07917967292538285  || Standard Deviation:  0.0121588671149478
+Win Step Counts:  Mean:35.81633333333333 || Std: 30.713112290283373
+Win %:  100.0
+Lose Step Count:  N/A
+Lose %:  0.0
+Timeout Step Count:  N/A
+Timeout %:  0.0
+================================
+Bonus Agent
+========== GAME STATS ==========                                                                                                                                                                   
+Predator confidence : Mean:  1.0  || Standard Deviation:  0.0
+Prey confidence : Mean:  0.07141112528207824  || Standard Deviation:  0.01001712526796096
+Win Step Counts:  Mean:60.40566666666667 || Std: 79.65451923497847
 Win %:  100.0
 Lose Step Count:  N/A
 Lose %:  0.0

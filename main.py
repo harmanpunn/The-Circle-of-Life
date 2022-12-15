@@ -97,15 +97,8 @@ def runGame(graph : Graph, data = None):
         elif Environment.getInstance().agent==5:
             agent : GraphEntity = P3Agent2(graph,useV=True,filePath="./modelDump/VModel")
         elif Environment.getInstance().agent==6:
-            qModel = Model(4)
-            qModel.add(8,ActivationFunction.leakyrelu)
-            qModel.add(16,ActivationFunction.leakyrelu)
-            qModel.add(8,ActivationFunction.leakyrelu)
-            qModel.add(4,ActivationFunction.leakyrelu)
-            qModel.add(1,ActivationFunction.leakyrelu)
-            qModel.use().initLayers()
-            agent : GraphEntity = P3AgentQ(graph,model=qModel)
-            agent.training =  True
+            agent : GraphEntity = P3Agent2Pred(graph,filePath="./modelDump/bonusModel")
+            agent.training =  False
 
 
     running = 1
