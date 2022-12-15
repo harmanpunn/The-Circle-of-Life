@@ -34,28 +34,23 @@ class P3Agent2(GraphEntity):
 
         self.belief = [1.0/self.node_count]*self.node_count
     
-    def getInputFromState(self,graph,state):
-        dt = [[0,0,0,0]]
-        dt[0][0], path = get_shortest_path(graph,state[0],state[1],returnPath=True)
-        # calculating Expected prey distance & parameters
-        for i in range(0,len(state[2])):
-            x = get_shortest_path(graph,state[0],i,find=state[1])
-            y = 1 if i in path else 0
-            # expected prey distance
-            dt[0][1] += state[2][i]*x[0]
-            # expected prey in pred path
-            dt[0][2] += state[2][i]*y
-            # expected pred in prey path
-            dt[0][3] += state[2][i]*x[1]
-        
-        return np.array([dt])
     def getValueOfState(self,graph,tmpState):
-        if tmpState[0]==tmpState[1]:
+        dt = [[]]
+        if tmpState[0]==tmpState[2]:
             # if terminal state
             return 9999
-        # use model to process
-        dt= self.getInputFromState(graph,tmpState)
-        return self.uModel.predict(dt)[0][0][0]
+        elif tmpState[0]==tmpState[1]:
+            return 0
+        # use model to processdt = [[]]
+        x = get_shortest_path(graph,tmpState[0],tmpState[1],find = tmpState[2])
+        y = get_shortest_path(graph,tmpState[0],tmpState[2],find = tmpState[1])
+        dt[0].append(y[0])
+        dt[0].append(x[0])
+        dt[0].append(y[1])
+        dt[0].append(x[1])
+        dt = np.array([dt])
+        p = self.uModel.predict(dt)[0][0][0]
+        return p
 
 
 
@@ -115,7 +110,7 @@ class P3Agent2(GraphEntity):
                 valOfTmpState = 0.0
                 for p in range(len(transitions)):
                     if self.useV:
-                        valOfTmpState += transitions[p]* self.getValueOfState(graph.info,tmpState)
+                        valOfTmpState += transitions[p]* self.getValueOfState(graph.info,(action,p,pred))
                     else:
                         valOfTmpState += transitions[p]* self.vals[(action,p,pred)]
 
