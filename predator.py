@@ -16,6 +16,7 @@ class Predator(GraphEntity):
         self.position = random.randint(0,Environment.getInstance().node_count-1)
         graph.allocate_pos(self.position,self.type)
     
+    
     '''
     Update the predator's position such that it moves to a neighbor node
     with shortest distance to agent 
@@ -26,16 +27,33 @@ class Predator(GraphEntity):
         graphInfo = graph.info
         
         neighbor_list = graphInfo[self.position]
-        next_position = random.choice(neighbor_list)
-        if (Environment.getInstance().agent>=5 and random.random()<=0.6) or Environment.getInstance().agent<5 or Environment.getInstance().p3:
-            dsts = [get_shortest_path(graphInfo, el, agent_position) for el in neighbor_list]
-            min_len = min(dsts)
+        
 
-            equal_dsts = [neighbor_list[i] for i in range(0,len(neighbor_list)) if dsts[i]==min_len  ]
-            next_position = random.choice(equal_dsts)                
+        if Environment.getInstance().distracted and random.random() <= 0.4:
+            print('Distracted Predator')
+            next_position = random.choice(neighbor_list)
+        else:
+            next_position = self.compute_next_position(graphInfo, agent_position, neighbor_list)
+
+        self.nextPosition = next_position    
+
+        # if (Environment.getInstance().agent>=5 and random.random()<=0.6) or Environment.getInstance().agent<5 or Environment.getInstance().p3:
+        #     dsts = [get_shortest_path(graphInfo, el, agent_position) for el in neighbor_list]
+        #     min_len = min(dsts)
+
+        #     equal_dsts = [neighbor_list[i] for i in range(0,len(neighbor_list)) if dsts[i]==min_len  ]
+        #     next_position = random.choice(equal_dsts)                
             
         # Update position of the predator
         self.nextPosition = next_position
+
+    def compute_next_position(self, graphInfo, agent_position, neighbor_list):
+        dsts = [get_shortest_path(graphInfo, el, agent_position) for el in neighbor_list]
+        min_len = min(dsts)
+
+        equal_dsts = [neighbor_list[i] for i in range(0,len(neighbor_list)) if dsts[i]==min_len  ]
+        next_position = random.choice(equal_dsts)
+        return next_position
 
 
     def shortest_path(self, graph, src, dest, distance, predecessor):
