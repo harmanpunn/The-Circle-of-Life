@@ -30,6 +30,7 @@ class Environment:
 
             self.graphs = 30
             self.games = 100
+            self.distracted = False
 
             self.mouse_counter = 0
             self.explore = False
