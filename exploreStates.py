@@ -23,13 +23,13 @@ print(os.path.exists(filePath))
 info, _ = pickle.load(open(filePath,"rb"))
 graph.info = info
 
-states, moves = pickle.load(open("./changeStates","rb"))
+states, moves = pickle.load(open("./changeStates2","rb"))
 
-# idx =  [i for i in range(0,len(states))]
-# shuffle(idx)
+idx =  [i for i in range(0,len(states))]
+shuffle(idx)
 
-# states = [states[i] for i in idx]
-# moves = [moves[i] for i in idx]
+states = [states[i] for i in idx]
+moves = [moves[i] for i in idx]
 
 
 renderer = Renderer(graph)

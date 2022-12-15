@@ -7,6 +7,7 @@ from tqdm import tqdm
 import pickle
 
 environment = Environment(False,50)
+environment.careful = True
 graph = Graph()
 
 data = readDumpFile(1)
@@ -53,4 +54,4 @@ for n in num:
     
 print(i)
 
-pickle.dump((nums,moves),open("./changeStates","wb"))
+pickle.dump((nums,moves),open("./changeStates2","wb"))
